@@ -1,6 +1,6 @@
-import requests
 import unittest
-import os
+import requests
+import json
 from datetime import datetime
 
 class CS2EsportsTrackerAPITest(unittest.TestCase):
@@ -20,6 +20,7 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
         response = requests.get(f"{self.base_url}/api")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"message": "CS2 Esports Tracker API"})
+        print("✅ Root endpoint test passed")
 
     def test_get_matches(self):
         """Test getting matches"""
@@ -34,13 +35,15 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
             required_fields = ['id', 'team1', 'team2', 'event', 'date', 'format']
             for field in required_fields:
                 self.assertIn(field, match)
+            print("✅ Match structure validation passed")
 
         # Test filtering by status
         response = requests.get(f"{self.base_url}/api/matches?status=upcoming")
         self.assertEqual(response.status_code, 200)
         upcoming_matches = response.json()
         if upcoming_matches:
-            self.assertEqual(upcoming_matches[0]['status'], 'upcoming')
+            self.assertEqual(upcoming_matches[0].get('status'), 'upcoming')
+            print("✅ Match filtering test passed")
 
     def test_refresh_matches(self):
         """Test refreshing matches"""
@@ -50,6 +53,7 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
         self.assertIn('status', result)
         self.assertIn('matches_updated', result)
         self.assertEqual(result['status'], 'success')
+        print("✅ Match refresh test passed")
 
     def test_bet_operations(self):
         """Test bet creation and retrieval"""
@@ -84,12 +88,14 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
         self.assertEqual(created_bet['odds'], bet_data['odds'])
         self.assertEqual(created_bet['stake'], bet_data['stake'])
         self.assertEqual(created_bet['status'], 'pending')
+        print("✅ Bet creation test passed")
         
         # Get all bets
         get_response = requests.get(f"{self.base_url}/api/bets")
         self.assertEqual(get_response.status_code, 200)
         bets = get_response.json()
         self.assertIsInstance(bets, list)
+        print("✅ Bet retrieval test passed")
         
         # Update bet
         bet_id = created_bet['id']
@@ -108,6 +114,7 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
         self.assertEqual(updated_bet['status'], 'settled')
         self.assertEqual(updated_bet['result'], 'win')
         self.assertEqual(updated_bet['actual_return'], 150)
+        print("✅ Bet update test passed")
 
     def test_error_handling(self):
         """Test error handling in various scenarios"""
@@ -120,6 +127,7 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
         }
         response = requests.post(f"{self.base_url}/api/bets", json=invalid_bet)
         self.assertEqual(response.status_code, 404)
+        print("✅ Invalid match ID error handling test passed")
 
         # Test invalid bet update
         response = requests.put(
@@ -127,6 +135,7 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
             json={"status": "settled"}
         )
         self.assertEqual(response.status_code, 404)
+        print("✅ Invalid bet update error handling test passed")
 
         # Test invalid odds in bet creation
         invalid_odds_bet = {
@@ -137,6 +146,7 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
         }
         response = requests.post(f"{self.base_url}/api/bets", json=invalid_odds_bet)
         self.assertEqual(response.status_code, 400)
+        print("✅ Invalid odds error handling test passed")
 
 if __name__ == '__main__':
     unittest.main(argv=[''], verbosity=2)
