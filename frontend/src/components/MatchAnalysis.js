@@ -65,6 +65,19 @@ const MatchAnalysis = ({ match, onClose }) => {
     }
   ];
 
+  // Get LAN and roster data if available
+  const analysis = match.analysis || {};
+  const isLan = analysis.is_lan;
+  const team1LanWinRate = analysis.team1_lan_win_rate;
+  const team1OnlineWinRate = analysis.team1_online_win_rate;
+  const team1RosterStability = analysis.team1_roster_stability;
+  const team1DaysSinceChange = analysis.team1_days_since_roster_change;
+  
+  const team2LanWinRate = analysis.team2_lan_win_rate;
+  const team2OnlineWinRate = analysis.team2_online_win_rate;
+  const team2RosterStability = analysis.team2_roster_stability;
+  const team2DaysSinceChange = analysis.team2_days_since_roster_change;
+  
   // Calculate average win probabilities
   const avgTeam1WinRate = mapPool.reduce((acc, map) => acc + map.team1WinRate, 0) / mapPool.length;
   const avgTeam2WinRate = mapPool.reduce((acc, map) => acc + map.team2WinRate, 0) / mapPool.length;
