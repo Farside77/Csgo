@@ -483,6 +483,10 @@ function App() {
           </div>
         </div>
       )}
+
+      {analysisMatch && (
+        <MatchAnalysis match={analysisMatch} onClose={closeAnalysis} />
+      )}
     </div>
   );
 }
