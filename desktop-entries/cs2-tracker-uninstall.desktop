@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Uninstall CS2 Esports Tracker
+Comment=Uninstall the CS2 Esports Tracker application
+Exec=bash -c 'xterm -e "sudo /app/uninstall.sh" || gnome-terminal --wait -- sudo /app/uninstall.sh || konsole -e "sudo /app/uninstall.sh" || xfce4-terminal -e "sudo /app/uninstall.sh" || lxterminal -e "sudo /app/uninstall.sh"'
+Icon=/app/frontend/public/favicon.ico
+Terminal=false
+Categories=Game;Utility;
