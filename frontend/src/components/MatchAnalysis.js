@@ -139,6 +139,92 @@ const MatchAnalysis = ({ match, onClose }) => {
           </div>
           
           <div className="analysis-section">
+            <h4>Performance Factors</h4>
+            <div className="performance-factors">
+              <div className="factor-section">
+                <h5>{isLan ? "🏆 LAN Event" : "🌐 Online Event"}</h5>
+                <div className="team-factors">
+                  <div className="team-factor">
+                    <span className="team-name">{match.team1}</span>
+                    <div className="factor-data">
+                      {team1LanWinRate && (
+                        <div className="factor-item">
+                          <span className="factor-label">LAN Win Rate:</span>
+                          <span className={`factor-value ${team1LanWinRate > 0.5 ? 'positive' : 'negative'}`}>
+                            {(team1LanWinRate * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      )}
+                      {team1OnlineWinRate && (
+                        <div className="factor-item">
+                          <span className="factor-label">Online Win Rate:</span>
+                          <span className={`factor-value ${team1OnlineWinRate > 0.5 ? 'positive' : 'negative'}`}>
+                            {(team1OnlineWinRate * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      )}
+                      {team1RosterStability && (
+                        <div className="factor-item">
+                          <span className="factor-label">Roster Stability:</span>
+                          <span className={`factor-value ${team1RosterStability > 0.5 ? 'positive' : 'negative'}`}>
+                            {(team1RosterStability * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      )}
+                      {team1DaysSinceChange && (
+                        <div className="factor-item">
+                          <span className="factor-label">Last Roster Change:</span>
+                          <span className="factor-value">
+                            {team1DaysSinceChange} days ago
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="team-factor">
+                    <span className="team-name">{match.team2}</span>
+                    <div className="factor-data">
+                      {team2LanWinRate && (
+                        <div className="factor-item">
+                          <span className="factor-label">LAN Win Rate:</span>
+                          <span className={`factor-value ${team2LanWinRate > 0.5 ? 'positive' : 'negative'}`}>
+                            {(team2LanWinRate * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      )}
+                      {team2OnlineWinRate && (
+                        <div className="factor-item">
+                          <span className="factor-label">Online Win Rate:</span>
+                          <span className={`factor-value ${team2OnlineWinRate > 0.5 ? 'positive' : 'negative'}`}>
+                            {(team2OnlineWinRate * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      )}
+                      {team2RosterStability && (
+                        <div className="factor-item">
+                          <span className="factor-label">Roster Stability:</span>
+                          <span className={`factor-value ${team2RosterStability > 0.5 ? 'positive' : 'negative'}`}>
+                            {(team2RosterStability * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      )}
+                      {team2DaysSinceChange && (
+                        <div className="factor-item">
+                          <span className="factor-label">Last Roster Change:</span>
+                          <span className="factor-value">
+                            {team2DaysSinceChange} days ago
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="analysis-section">
             <h4>Map Analysis</h4>
             <div className="map-pool">
               {mapPool.map((map, index) => (
