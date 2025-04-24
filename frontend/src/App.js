@@ -39,6 +39,7 @@ function App() {
       
       const data = await response.json();
       setMatches(data);
+      setFilteredMatches(data);
       setError(null);
     } catch (err) {
       setError(`Failed to load matches: ${err.message}`);
