@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "Building CS2 Esports Tracker Installer..."
+node build-installer.js
