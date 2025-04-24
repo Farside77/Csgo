@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=CS2 Esports Tracker
+Comment=Track CS2 Esports matches and betting opportunities
+Exec=/app/launch_cs2.sh
+Icon=/app/frontend/public/favicon.ico
+Terminal=false
+Categories=Game;Utility;
