@@ -31,7 +31,8 @@ function App() {
   const fetchMatches = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${BACKEND_URL}/api/matches`);
+      // BACKEND_URL already includes /api prefix from .env file
+      const response = await fetch(`${BACKEND_URL}/matches`);
       
       if (!response.ok) {
         throw new Error(`Error fetching matches: ${response.statusText}`);
