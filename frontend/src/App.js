@@ -32,6 +32,7 @@ function App() {
     try {
       setIsLoading(true);
       // BACKEND_URL already includes /api prefix from .env file
+      console.log("Fetching matches from:", `${BACKEND_URL}/matches`);
       const response = await fetch(`${BACKEND_URL}/matches`);
       
       if (!response.ok) {
@@ -39,12 +40,13 @@ function App() {
       }
       
       const data = await response.json();
+      console.log("Received matches data:", data);
       setMatches(data);
       setFilteredMatches(data);
       setError(null);
     } catch (err) {
+      console.error("Match fetch error details:", err);
       setError(`Failed to load matches: ${err.message}`);
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
