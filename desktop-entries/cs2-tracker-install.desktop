@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Install CS2 Esports Tracker
+Comment=Install the CS2 Esports Tracker application
+Exec=bash -c 'xterm -e "sudo /app/install.sh" || gnome-terminal --wait -- sudo /app/install.sh || konsole -e "sudo /app/install.sh" || xfce4-terminal -e "sudo /app/install.sh" || lxterminal -e "sudo /app/install.sh"'
+Icon=/app/frontend/public/favicon.ico
+Terminal=false
+Categories=Game;Utility;
