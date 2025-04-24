@@ -71,8 +71,8 @@ function App() {
   const refreshMatches = async () => {
     try {
       setRefreshing(true);
-      // BACKEND_URL already includes /api prefix
-      const response = await fetch(`${BACKEND_URL}/refresh-matches`, {
+      // Add /api prefix to backend URL
+      const response = await fetch(`${BACKEND_URL}/api/refresh-matches`, {
         method: 'POST',
       });
       
