@@ -3,7 +3,7 @@ import pytest
 from datetime import datetime, timedelta
 import uuid
 
-BACKEND_URL = "https://backend-cs2-esports-tracker.zanity.net/api"
+BACKEND_URL = "http://localhost:8001/api"
 
 class TestCS2EsportsTracker:
     def __init__(self):
