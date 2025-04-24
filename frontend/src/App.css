@@ -195,10 +195,38 @@ body {
   font-size: 16px;
 }
 
+.odds-container {
+  position: relative;
+  display: inline-block;
+}
+
 .odds {
   font-size: 0.8rem;
   color: var(--text-light);
   font-weight: 400;
+  cursor: pointer;
+}
+
+.odds-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--card-background);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.odds-container:hover .odds-tooltip {
+  opacity: 1;
+  visibility: visible;
 }
 
 .vs {
