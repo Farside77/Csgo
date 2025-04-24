@@ -807,9 +807,26 @@ async def get_matches(status: str = "all"):
         cursor = db.matches.find(filter_query).sort("date", 1)
         matches = await cursor.to_list(length=100)
         
-        # Convert ObjectId to string for JSON serialization
+        # Add predictions for any matches missing them
         for match in matches:
+            # Convert ObjectId to string for JSON serialization
             match["_id"] = str(match["_id"])
+            
+            # Check if match needs prediction data
+            if not match.get("predicted_winner") or not match.get("win_probability"):
+                # Calculate predictions
+                try:
+                    predictions = await calculate_match_predictions(match)
+                    match.update(predictions)
+                    
+                    # Update the match in the database with predictions
+                    await db.matches.update_one(
+                        {"id": match["id"]},
+                        {"$set": predictions}
+                    )
+                except Exception as prediction_error:
+                    logger.error(f"Error calculating predictions for match {match.get('id')}: {prediction_error}")
+                    # Continue without predictions rather than failing entire request
         
         return matches
     except Exception as e:
