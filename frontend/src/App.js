@@ -158,6 +158,14 @@ function App() {
       stake: 0,
     });
   };
+  
+  const openAnalysis = (match) => {
+    setAnalysisMatch(match);
+  };
+  
+  const closeAnalysis = () => {
+    setAnalysisMatch(null);
+  };
 
   // Calculate betting performance metrics
   const betMetrics = bets.reduce(
