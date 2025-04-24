@@ -3,6 +3,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const os = require('os');
+const installDependencies = require('./install-deps');
 
 // Keep a global reference of the window object to avoid garbage collection
 let mainWindow;
