@@ -76,3 +76,8 @@ echo "========================================="
 # Keep uninstall script
 echo "This uninstall script can be deleted manually if no longer needed:"
 echo "rm -f /app/uninstall.sh"
+
+# Keep the terminal window open until the user presses a key
+echo ""
+echo "Press any key to close this window..."
+read -n 1 -s
