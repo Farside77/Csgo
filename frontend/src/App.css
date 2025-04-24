@@ -639,6 +639,67 @@ body {
   gap: 10px;
 }
 
+/* Performance Factors */
+.performance-factors {
+  background-color: #f0f4f8;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+.factor-section h5 {
+  font-size: 1rem;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.team-factors {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.team-factor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.team-factor .team-name {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.factor-data {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.factor-item {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.factor-label {
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.factor-value {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  .factor-data {
+    grid-template-columns: 1fr;
+  }
+}
+
 .recommendation {
   background-color: #f0f4f8;
   padding: 15px;
