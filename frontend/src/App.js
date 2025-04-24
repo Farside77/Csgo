@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import "./App.css";
+import MatchAnalysis from './components/MatchAnalysis';
+import MatchFilter from './components/MatchFilter';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
