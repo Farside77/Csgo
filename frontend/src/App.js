@@ -62,7 +62,7 @@ function App() {
   const refreshMatches = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch(`${BACKEND_URL}/api/refresh-matches`, {
+      const response = await fetch(`${BACKEND_URL}/refresh-matches`, {
         method: 'POST',
       });
       
