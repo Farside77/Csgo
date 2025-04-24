@@ -242,13 +242,31 @@ def generate_sample_matches():
         "Complexity", "Cloud9", "TYLOO", "Renegades", "Team Spirit"
     ]
     
+    # Events with LAN status (major tournaments are typically LAN)
     events = [
-        "ESL Pro League S17", "BLAST Premier Spring", "IEM Katowice 2025",
-        "PGL Major Stockholm", "DreamHack Masters", "BLAST Premier Fall",
-        "ESL One Cologne", "IEM Winter", "BLAST Premier Global Final"
+        {"name": "ESL Pro League S17", "is_lan": True},
+        {"name": "BLAST Premier Spring", "is_lan": True},
+        {"name": "IEM Katowice 2025", "is_lan": True},
+        {"name": "PGL Major Stockholm", "is_lan": True},
+        {"name": "DreamHack Masters", "is_lan": True},
+        {"name": "BLAST Premier Fall", "is_lan": True},
+        {"name": "ESL One Cologne", "is_lan": True},
+        {"name": "IEM Winter", "is_lan": True},
+        {"name": "BLAST Premier Global Final", "is_lan": True},
+        {"name": "ESL Challenger League", "is_lan": False},
+        {"name": "ESEA Premier", "is_lan": False},
+        {"name": "Elisa Invitational", "is_lan": False},
+        {"name": "Funspark ULTI", "is_lan": False}
     ]
     
     formats = ["Bo1", "Bo3", "Bo5"]
+    
+    # Generate synthetic roster data - dates of last roster change
+    roster_changes = {}
+    for team in teams:
+        # Random date in the last 2 years
+        days_ago = random.randint(0, 730)
+        roster_changes[team] = (datetime.now() - timedelta(days=days_ago)).isoformat()
     
     matches = []
     
@@ -263,7 +281,9 @@ def generate_sample_matches():
         team1 = teams[team_idx1]
         team2 = teams[team_idx2]
         
-        event = events[i % len(events)]
+        event_info = events[i % len(events)]
+        event = event_info["name"]
+        is_lan = event_info["is_lan"]
         match_format = formats[i % len(formats)]
         
         # Generate random but realistic odds
@@ -284,10 +304,83 @@ def generate_sample_matches():
             "format": match_format,
             "team1_odds": team1_odds,
             "team2_odds": team2_odds,
-            "status": "upcoming"
+            "is_lan": is_lan,
+            "status": "upcoming",
+            "roster_info": {
+                "team1_last_change": roster_changes[team1],
+                "team2_last_change": roster_changes[team2]
+            }
         }
         
         matches.append(match)
+    
+    # Also add some past matches with results for history
+    past_matches = []
+    for i in range(20):
+        team_idx1 = (hash(str(i+100)) % len(teams))
+        team_idx2 = (hash(str(i+200)) % len(teams))
+        while team_idx1 == team_idx2:
+            team_idx2 = (team_idx2 + 1) % len(teams)
+            
+        team1 = teams[team_idx1]
+        team2 = teams[team_idx2]
+        
+        event_info = events[i % len(events)]
+        event = event_info["name"]
+        is_lan = event_info["is_lan"]
+        match_format = formats[i % len(formats)]
+        
+        # Past dates ranging from 1 day to 1 year ago
+        days_ago = random.randint(1, 365)
+        match_time = datetime.now() - timedelta(days=days_ago)
+        
+        # Determine winner
+        winner = team1 if random.random() < 0.5 else team2
+        
+        # Generate score based on format
+        if match_format == "Bo1":
+            score = "1-0" if winner == team1 else "0-1"
+        elif match_format == "Bo3":
+            if winner == team1:
+                score = "2-0" if random.random() < 0.4 else "2-1"
+            else:
+                score = "0-2" if random.random() < 0.4 else "1-2"
+        else:  # Bo5
+            if winner == team1:
+                r = random.random()
+                if r < 0.3:
+                    score = "3-0"
+                elif r < 0.7:
+                    score = "3-1"
+                else:
+                    score = "3-2"
+            else:
+                r = random.random()
+                if r < 0.3:
+                    score = "0-3"
+                elif r < 0.7:
+                    score = "1-3"
+                else:
+                    score = "2-3"
+        
+        past_match = {
+            "id": str(uuid.uuid4()),
+            "team1": team1,
+            "team2": team2,
+            "event": event,
+            "date": match_time.isoformat(),
+            "format": match_format,
+            "is_lan": is_lan,
+            "status": "completed",
+            "winner": winner,
+            "score": score
+        }
+        
+        past_matches.append(past_match)
+    
+    # Store past matches in the database for prediction analysis
+    # This would be done asynchronously in a real app, but we'll use a simpler approach
+    # for the sample data
     
     return matches
 
