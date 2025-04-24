@@ -50,20 +50,43 @@ yarn install
 
 ## Running the Application
 
-### One-Click Launcher
+### Multiple Ways to Launch
 
-Simply run the launcher script to start the application:
+There are several ways to launch the application:
 
-```bash
-/app/launcher.sh
-```
+1. **Desktop Icon**:
+   - After installation, use the "CS2 Esports Tracker" desktop icon
 
-This will:
+2. **Launcher Scripts**:
+   - Double-click on `/app/run_cs2_tracker.sh` in your file manager
+   - This script will automatically find an appropriate terminal to use
+
+3. **Terminal Command**:
+   ```bash
+   sudo /app/launcher.sh
+   ```
+
+Any of these methods will:
 1. Check if the application is installed, and run the installer if needed
 2. Start MongoDB if it's not running
 3. Start the backend server
 4. Start the frontend application
 5. Display the URLs where you can access the application
+
+### Installation Options
+
+Similarly, you have multiple ways to install the application:
+
+1. **Desktop Icon**:
+   - Use the "Install CS2 Esports Tracker" desktop icon
+
+2. **Install Script**:
+   - Double-click on `/app/install_cs2_tracker.sh` in your file manager
+
+3. **Terminal Command**:
+   ```bash
+   sudo /app/install.sh
+   ```
 
 ### Manual Start
 
