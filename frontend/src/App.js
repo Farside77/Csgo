@@ -54,8 +54,8 @@ function App() {
 
   const fetchBets = async () => {
     try {
-      // BACKEND_URL already includes /api prefix
-      const response = await fetch(`${BACKEND_URL}/bets`);
+      // Add /api prefix to backend URL
+      const response = await fetch(`${BACKEND_URL}/api/bets`);
       
       if (!response.ok) {
         throw new Error(`Error fetching bets: ${response.statusText}`);
