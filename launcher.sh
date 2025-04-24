@@ -74,3 +74,8 @@ echo "  - sudo supervisorctl restart frontend       # Restart frontend"
 echo "  - sudo supervisorctl stop all               # Stop all services"
 echo "  - sudo supervisorctl start all              # Start all services"
 echo "========================================="
+
+# Keep the terminal window open until the user presses a key
+echo ""
+echo "Press any key to close this window..."
+read -n 1 -s
