@@ -29,13 +29,31 @@ apt-get update
 status "Installing system dependencies"
 apt-get install -y supervisor python3 python3-pip nodejs npm git curl
 
-# Install MongoDB
+# Install MongoDB (with alternative fallback options)
 status "Installing MongoDB"
-apt-get install -y gnupg
-curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | apt-key add -
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list
-apt-get update
-apt-get install -y mongodb-org
+if ! mongod --version &> /dev/null; then
+    # Try the official MongoDB repo first
+    if apt-get install -y gnupg; then
+        curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | apt-key add - || true
+        echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+        apt-get update || true
+        apt-get install -y mongodb-org || {
+            # If that fails, try mongodb-server package from default repos
+            apt-get install -y mongodb-server || {
+                # If that also fails, try mongodb package
+                apt-get install -y mongodb || {
+                    echo "Warning: Could not install MongoDB from repositories."
+                    echo "Will try to use an existing MongoDB or run without it."
+                }
+            }
+        }
+    else
+        echo "Warning: Could not install gnupg, skipping MongoDB installation from official repo."
+        apt-get install -y mongodb-server || apt-get install -y mongodb || true
+    fi
+else
+    status "MongoDB is already installed"
+fi
 
 # Create MongoDB data directory
 status "Setting up MongoDB data directory"
