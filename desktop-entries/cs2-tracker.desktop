@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=CS2 Esports Tracker
+Comment=Track CS2 Esports matches and betting opportunities
+Exec=bash -c 'xterm -e "sudo /app/launcher.sh" || gnome-terminal --wait -- sudo /app/launcher.sh || konsole -e "sudo /app/launcher.sh" || xfce4-terminal -e "sudo /app/launcher.sh" || lxterminal -e "sudo /app/launcher.sh"'
+Icon=/app/frontend/public/favicon.ico
+Terminal=false
+Categories=Game;Utility;
