@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to CS2 Esports Tracker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin: 2rem;
+            text-align: center;
+        }
+        h1 {
+            color: #1e3a8a;
+            margin-bottom: 1rem;
+        }
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 1.5rem;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #3b82f6;
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 4px;
+        }
+        .status {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to CS2 Esports Tracker</h1>
+        <p>Thank you for installing CS2 Esports Tracker! We're setting up your application.</p>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="status" id="statusText">Preparing installation...</div>
+    </div>
+
+    <script>
+        // Simulate progress for better UX
+        const progressBar = document.getElementById('progressBar');
+        const statusText = document.getElementById('statusText');
+        let progress = 0;
+        
+        function updateProgress(value, text) {
+            progress = value;
+            progressBar.style.width = `${progress}%`;
+            if (text) {
+                statusText.textContent = text;
+            }
+        }
+        
+        // Start with some progress animation
+        updateProgress(5, 'Preparing installation...');
+        
+        const progressSteps = [
+            { progress: 15, text: 'Checking system requirements...', time: 1000 },
+            { progress: 30, text: 'Verifying dependencies...', time: 1500 },
+            { progress: 50, text: 'Installing required components...', time: 2000 },
+            { progress: 75, text: 'Setting up database...', time: 1800 },
+            { progress: 90, text: 'Finalizing installation...', time: 1200 },
+        ];
+        
+        let stepIndex = 0;
+        
+        function nextStep() {
+            if (stepIndex < progressSteps.length) {
+                const step = progressSteps[stepIndex];
+                updateProgress(step.progress, step.text);
+                stepIndex++;
+                setTimeout(nextStep, step.time);
+            }
+        }
+        
+        // Start progress animation
+        setTimeout(nextStep, 800);
+        
+        // Listen for actual status updates from the main process
+        if (window.api) {
+            window.api.receive('installation-status', (message) => {
+                statusText.textContent = message;
+            });
+            
+            window.api.receive('installation-progress', (value) => {
+                updateProgress(value);
+            });
+            
+            window.api.receive('installation-complete', () => {
+                updateProgress(100, 'Installation complete!');
+            });
+        }
+    </script>
+</body>
+</html>
