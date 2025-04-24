@@ -133,8 +133,8 @@ function App() {
       
       const actual_return = result === 'win' ? betToUpdate.potential_return : 0;
       
-      // BACKEND_URL already includes /api prefix
-      const response = await fetch(`${BACKEND_URL}/bets/${betId}`, {
+      // Add /api prefix to backend URL
+      const response = await fetch(`${BACKEND_URL}/api/bets/${betId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
