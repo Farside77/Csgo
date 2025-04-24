@@ -3,7 +3,7 @@ import requests
 import json
 from datetime import datetime, timedelta
 
-BACKEND_URL = "https://backend-7443.api.codedamn.app/api"
+BACKEND_URL = "http://localhost:8001/api"
 
 class CS2EsportsTrackerTest(unittest.TestCase):
     def setUp(self):
