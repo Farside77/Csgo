@@ -28,10 +28,11 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://10.64.137.72:3000"],
     allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["Content-Type"],
 )
 
 # Configure logging
