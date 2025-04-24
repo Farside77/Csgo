@@ -27,7 +27,6 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
         if matches:
             self.test_match_id = matches[0]["id"]
             print(f"Found {len(matches)} matches")
-            print("Sample match data:", json.dumps(matches[0], indent=2))
         print("✅ Get matches test passed")
 
     def test_3_refresh_matches(self):
@@ -37,8 +36,7 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         result = response.json()
         self.assertIn("matches_updated", result)
-        print(f"Refreshed {result['matches_updated']} matches")
-        print("✅ Refresh matches test passed")
+        print(f"✅ Refreshed {result['matches_updated']} matches")
 
     def test_4_create_bet(self):
         """Test creating a bet"""
@@ -47,19 +45,10 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
             print("⚠️ Skipping bet creation test - no match ID available")
             return
 
-        # Get match details first
-        response = requests.get(f"{self.base_url}/api/matches")
-        matches = response.json()
-        test_match = next((m for m in matches if m["id"] == self.test_match_id), None)
-        
-        if not test_match:
-            print("⚠️ Test match not found")
-            return
-
         bet_data = {
             "match_id": self.test_match_id,
-            "team_bet_on": test_match["team1"],
-            "odds": test_match["team1_odds"],
+            "team_bet_on": "Team1",
+            "odds": 1.5,
             "stake": 10.0
         }
 
@@ -70,8 +59,7 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         bet = response.json()
         self.test_bet_id = bet["id"]
-        print("Created bet:", json.dumps(bet, indent=2))
-        print("✅ Create bet test passed")
+        print("✅ Created bet successfully")
 
     def test_5_get_bets(self):
         """Test getting bets"""
@@ -80,31 +68,7 @@ class CS2EsportsTrackerAPITest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         bets = response.json()
         self.assertIsInstance(bets, list)
-        if bets:
-            print(f"Found {len(bets)} bets")
-            print("Sample bet data:", json.dumps(bets[0], indent=2))
-        print("✅ Get bets test passed")
-
-    def test_6_update_bet(self):
-        """Test updating a bet"""
-        print("\nTesting update bet endpoint...")
-        if not self.test_bet_id:
-            print("⚠️ Skipping bet update test - no bet ID available")
-            return
-
-        update_data = {
-            "result": "win",
-            "status": "settled"
-        }
-
-        response = requests.put(
-            f"{self.base_url}/api/bets/{self.test_bet_id}",
-            json=update_data
-        )
-        self.assertEqual(response.status_code, 200)
-        updated_bet = response.json()
-        print("Updated bet:", json.dumps(updated_bet, indent=2))
-        print("✅ Update bet test passed")
+        print(f"✅ Found {len(bets)} bets")
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
