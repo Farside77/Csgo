@@ -133,3 +133,19 @@ If you encounter any issues:
    ```bash
    sudo /app/install.sh
    ```
+
+## Uninstallation
+
+If you need to uninstall the application, you can use the provided uninstall script:
+
+```bash
+sudo /app/uninstall.sh
+```
+
+This script will:
+1. Stop all running services
+2. Remove supervisor configurations
+3. Remove application files
+4. Remove the desktop shortcut
+5. Ask if you want to remove MongoDB data
+6. Ask if you want to remove the cloned repository
