@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CS2 Esports Tracker API Test</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #4a6ecc;
+        }
+        button {
+            background-color: #5d87ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #4a6ecc;
+        }
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .error {
+            color: #f44336;
+            font-weight: bold;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CS2 Esports Tracker API Test</h1>
+    <p>This page tests the connection between the frontend and backend API.</p>
+
+    <div>
+        <button onclick="testApi('http://localhost:8001/api', 'rootEndpoint')">Test API Root</button>
+        <button onclick="testApi('http://localhost:8001/api/matches', 'matchesEndpoint')">Test Matches API</button>
+        <button onclick="testApi('http://localhost:8001/api/bets', 'betsEndpoint')">Test Bets API</button>
+        <button onclick="testRefreshMatches()">Test Refresh Matches</button>
+    </div>
+
+    <h2>API Root Endpoint</h2>
+    <div>
+        <h3>Status: <span id="rootEndpointStatus">Not tested</span></h3>
+        <pre id="rootEndpointResult">Click the button to test</pre>
+    </div>
+
+    <h2>Matches Endpoint</h2>
+    <div>
+        <h3>Status: <span id="matchesEndpointStatus">Not tested</span></h3>
+        <pre id="matchesEndpointResult">Click the button to test</pre>
+    </div>
+
+    <h2>Bets Endpoint</h2>
+    <div>
+        <h3>Status: <span id="betsEndpointStatus">Not tested</span></h3>
+        <pre id="betsEndpointResult">Click the button to test</pre>
+    </div>
+
+    <h2>Refresh Matches Endpoint</h2>
+    <div>
+        <h3>Status: <span id="refreshEndpointStatus">Not tested</span></h3>
+        <pre id="refreshEndpointResult">Click the button to test</pre>
+    </div>
+
+    <script>
+        async function testApi(url, elementId) {
+            try {
+                console.log(`Testing API at ${url}...`);
+                document.getElementById(`${elementId}Status`).innerText = "Testing...";
+                
+                const response = await fetch(url);
+                console.log("Response status:", response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log("Got data:", data);
+                
+                document.getElementById(`${elementId}Result`).innerText = JSON.stringify(data, null, 2);
+                document.getElementById(`${elementId}Status`).innerText = "Success!";
+                document.getElementById(`${elementId}Status`).className = "success";
+                
+                return data;
+            } catch (error) {
+                console.error("API test error:", error);
+                document.getElementById(`${elementId}Result`).innerText = error.toString();
+                document.getElementById(`${elementId}Status`).innerText = "Failed!";
+                document.getElementById(`${elementId}Status`).className = "error";
+                
+                return null;
+            }
+        }
+
+        async function testRefreshMatches() {
+            try {
+                console.log("Testing Refresh Matches API...");
+                document.getElementById("refreshEndpointStatus").innerText = "Testing...";
+                
+                const response = await fetch("http://localhost:8001/api/refresh-matches", {
+                    method: "POST"
+                });
+                console.log("Response status:", response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log("Got data:", data);
+                
+                document.getElementById("refreshEndpointResult").innerText = JSON.stringify(data, null, 2);
+                document.getElementById("refreshEndpointStatus").innerText = "Success!";
+                document.getElementById("refreshEndpointStatus").className = "success";
+                
+                return data;
+            } catch (error) {
+                console.error("API test error:", error);
+                document.getElementById("refreshEndpointResult").innerText = error.toString();
+                document.getElementById("refreshEndpointStatus").innerText = "Failed!";
+                document.getElementById("refreshEndpointStatus").className = "error";
+                
+                return null;
+            }
+        }
+    </script>
+</body>
+</html>
