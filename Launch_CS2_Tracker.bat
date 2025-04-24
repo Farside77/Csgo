@@ -1,0 +1,3 @@
+@echo off
+echo Launching CS2 Esports Tracker...
+bash /app/launch_cs2.sh
