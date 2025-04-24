@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CS2 Esports Tracker - Start Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .command {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .note {
+            background-color: #ffffd8;
+            padding: 15px;
+            border-left: 5px solid #e7e7a8;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CS2 Esports Tracker - Start Guide</h1>
+    
+    <div class="note">
+        <strong>Note:</strong> If you're seeing "command not found" errors, try the methods below.
+    </div>
+    
+    <h2>Option 1: Start via Terminal (Recommended)</h2>
+    <p>Open a terminal window and run:</p>
+    <div class="command">sudo supervisorctl start mongodb backend frontend</div>
+    
+    <h2>Option 2: Use the Start Script</h2>
+    <p>Run the start script in a terminal:</p>
+    <div class="command">sh /app/START_HERE.sh</div>
+    
+    <h2>Option 3: Run the Simple Shell Script</h2>
+    <p>Run the plain sh script:</p>
+    <div class="command">sh /app/run.sh</div>
+    
+    <h2>Option 4: Manual Start</h2>
+    <p>Execute these commands one by one in a terminal:</p>
+    <div class="command">
+        sudo supervisorctl start mongodb<br>
+        sudo supervisorctl start backend<br>
+        sudo supervisorctl start frontend
+    </div>
+    
+    <h2>Accessing the Application</h2>
+    <p>Once started, access the application at:</p>
+    <div class="command"><a href="http://localhost:3000" target="_blank">http://localhost:3000</a></div>
+    
+    <h2>Checking Status</h2>
+    <p>To check if all services are running:</p>
+    <div class="command">sudo supervisorctl status</div>
+    
+    <h2>Need Help?</h2>
+    <p>Read the full documentation at:</p>
+    <div class="command">/app/QUICKSTART.md</div>
+</body>
+</html>
