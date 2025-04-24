@@ -985,10 +985,79 @@ async def scheduled_match_refresh():
 async def startup_event():
     # Create database indexes
     await db.matches.create_index("id", unique=True)
+    await db.matches.create_index("team1")  # Index for team1 queries
+    await db.matches.create_index("team2")  # Index for team2 queries
+    await db.matches.create_index("status")  # Index for status filtering
+    await db.matches.create_index("date")  # Index for date sorting
+    await db.matches.create_index("is_lan")  # Index for LAN filtering
+
     await db.bets.create_index("id", unique=True)
+    await db.bets.create_index("match_id")  # Index for match ID queries
+    await db.bets.create_index("status")  # Index for bet status filtering
+    await db.bets.create_index([("created_at", -1)])  # Index for sorting by date
+    
+    # Create team stats collection - useful for faster prediction calculations
+    if await db.team_stats.count_documents({}) == 0:
+        logger.info("Initializing team stats collection")
+        await initialize_team_stats()
     
     # Start the scheduled match refresh task
     asyncio.create_task(scheduled_match_refresh())
+
+async def initialize_team_stats():
+    """Initialize team stats collection with default values"""
+    try:
+        # Get all unique teams from matches
+        pipeline = [
+            {"$group": {"_id": "$team1"}},
+            {"$project": {"team_name": "$_id", "_id": 0}}
+        ]
+        team1_cursor = db.matches.aggregate(pipeline)
+        
+        pipeline = [
+            {"$group": {"_id": "$team2"}},
+            {"$project": {"team_name": "$_id", "_id": 0}}
+        ]
+        team2_cursor = db.matches.aggregate(pipeline)
+        
+        team1_docs = await team1_cursor.to_list(length=100)
+        team2_docs = await team2_cursor.to_list(length=100)
+        
+        # Combine and deduplicate
+        all_teams = {doc["team_name"] for doc in team1_docs + team2_docs if doc["team_name"]}
+        
+        # Insert default stats for each team
+        for team_name in all_teams:
+            if not await db.team_stats.find_one({"team_name": team_name}):
+                # Generate consistent team stats based on team name hash
+                team_hash = hash(team_name) % 100
+                win_rate = 0.4 + (team_hash / 166.7)  # Range: 0.4 to 0.7
+                recent_form = 0.3 + (team_hash / 143)  # Range: 0.3 to 0.7
+                
+                team_stats = {
+                    "team_name": team_name,
+                    "win_rate": win_rate,
+                    "form": recent_form,
+                    "lan_win_rate": 0.45 + (team_hash / 200),
+                    "online_win_rate": 0.4 + (team_hash / 166.7),
+                    "map_win_rates": {
+                        "dust2": 0.4 + (hash(team_name + "dust2") % 100) / 200,
+                        "mirage": 0.4 + (hash(team_name + "mirage") % 100) / 200,
+                        "inferno": 0.4 + (hash(team_name + "inferno") % 100) / 200,
+                        "nuke": 0.4 + (hash(team_name + "nuke") % 100) / 200,
+                        "overpass": 0.4 + (hash(team_name + "overpass") % 100) / 200,
+                        "vertigo": 0.4 + (hash(team_name + "vertigo") % 100) / 200,
+                        "ancient": 0.4 + (hash(team_name + "ancient") % 100) / 200
+                    },
+                    "last_roster_change": (datetime.now() - timedelta(days=random.randint(30, 365))).isoformat(),
+                    "updated_at": datetime.now().isoformat()
+                }
+                
+                await db.team_stats.insert_one(team_stats)
+        
+        logger.info(f"Initialized team stats for {len(all_teams)} teams")
+    except Exception as e:
+        logger.error(f"Error initializing team stats: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
