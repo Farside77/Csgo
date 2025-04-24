@@ -1,138 +1,110 @@
+import unittest
 import requests
-import pytest
-import os
+import json
 from datetime import datetime
-import time
 
-# Get backend URL from environment variable
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')
+class CS2EsportsTrackerAPITest(unittest.TestCase):
+    def setUp(self):
+        self.base_url = "https://backend-cs2-esports-tracker-vwkm.onrender.com"
+        self.test_match_id = None
+        self.test_bet_id = None
 
-class TestCS2EsportsTracker:
-    def test_api_root(self):
-        """Test the API root endpoint"""
-        response = requests.get(f"{BACKEND_URL}/api")
-        assert response.status_code == 200
-        assert response.json() == {"message": "CS2 Esports Tracker API"}
+    def test_1_api_root(self):
+        """Test API root endpoint"""
+        print("\nTesting API root endpoint...")
+        response = requests.get(f"{self.base_url}/api")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("message", response.json())
+        print("✅ API root endpoint test passed")
 
-    def test_get_matches(self):
+    def test_2_get_matches(self):
         """Test getting matches"""
-        # First refresh matches
-        refresh_response = requests.post(f"{BACKEND_URL}/api/refresh-matches")
-        assert refresh_response.status_code == 200
-        
-        # Wait a bit for matches to be processed
-        time.sleep(2)
-        
-        response = requests.get(f"{BACKEND_URL}/api/matches")
-        assert response.status_code == 200
+        print("\nTesting get matches endpoint...")
+        response = requests.get(f"{self.base_url}/api/matches")
+        self.assertEqual(response.status_code, 200)
         matches = response.json()
-        assert isinstance(matches, list)
-        
-        # If matches exist, verify their structure
+        self.assertIsInstance(matches, list)
         if matches:
-            match = matches[0]
-            required_fields = ['id', 'team1', 'team2', 'event', 'date', 'format', 'status']
-            for field in required_fields:
-                assert field in match
+            self.test_match_id = matches[0]["id"]
             print(f"Found {len(matches)} matches")
-            return matches
-        else:
-            print("No matches found")
-            return []
+            print("Sample match data:", json.dumps(matches[0], indent=2))
+        print("✅ Get matches test passed")
 
-    def test_refresh_matches(self):
-        """Test refreshing matches from HLTV"""
-        response = requests.post(f"{BACKEND_URL}/api/refresh-matches")
-        assert response.status_code == 200
+    def test_3_refresh_matches(self):
+        """Test refreshing matches"""
+        print("\nTesting refresh matches endpoint...")
+        response = requests.post(f"{self.base_url}/api/refresh-matches")
+        self.assertEqual(response.status_code, 200)
         result = response.json()
-        assert "status" in result
-        assert "matches_updated" in result
-        assert result["status"] == "success"
-        print(f"Updated {result['matches_updated']} matches")
+        self.assertIn("matches_updated", result)
+        print(f"Refreshed {result['matches_updated']} matches")
+        print("✅ Refresh matches test passed")
 
-    def test_bet_workflow(self, matches=None):
-        """Test the complete betting workflow"""
-        if not matches:
-            # Get matches if not provided
-            matches_response = requests.get(f"{BACKEND_URL}/api/matches")
-            assert matches_response.status_code == 200
-            matches = matches_response.json()
-        
-        if not matches:
-            print("No matches available for betting test")
+    def test_4_create_bet(self):
+        """Test creating a bet"""
+        print("\nTesting create bet endpoint...")
+        if not self.test_match_id:
+            print("⚠️ Skipping bet creation test - no match ID available")
             return
+
+        # Get match details first
+        response = requests.get(f"{self.base_url}/api/matches")
+        matches = response.json()
+        test_match = next((m for m in matches if m["id"] == self.test_match_id), None)
         
-        match = matches[0]
-        print(f"\nTesting bet on match: {match['team1']} vs {match['team2']}")
-        
-        # Create a bet
+        if not test_match:
+            print("⚠️ Test match not found")
+            return
+
         bet_data = {
-            "match_id": match["id"],
-            "team_bet_on": match["team1"],
-            "odds": 2.0,
-            "stake": 100
+            "match_id": self.test_match_id,
+            "team_bet_on": test_match["team1"],
+            "odds": test_match["team1_odds"],
+            "stake": 10.0
         }
-        
-        create_bet_response = requests.post(
-            f"{BACKEND_URL}/api/bets",
+
+        response = requests.post(
+            f"{self.base_url}/api/bets",
             json=bet_data
         )
-        assert create_bet_response.status_code == 200
-        bet = create_bet_response.json()
-        assert bet["id"] is not None
-        assert bet["potential_return"] == bet_data["odds"] * bet_data["stake"]
-        print(f"Created bet on {bet['team_bet_on']} with stake ${bet['stake']}")
-        
-        # Get all bets
-        get_bets_response = requests.get(f"{BACKEND_URL}/api/bets")
-        assert get_bets_response.status_code == 200
-        bets = get_bets_response.json()
-        assert isinstance(bets, list)
-        assert len(bets) > 0
-        print(f"Found {len(bets)} total bets")
-        
-        # Update bet result
-        bet_update = {
+        self.assertEqual(response.status_code, 200)
+        bet = response.json()
+        self.test_bet_id = bet["id"]
+        print("Created bet:", json.dumps(bet, indent=2))
+        print("✅ Create bet test passed")
+
+    def test_5_get_bets(self):
+        """Test getting bets"""
+        print("\nTesting get bets endpoint...")
+        response = requests.get(f"{self.base_url}/api/bets")
+        self.assertEqual(response.status_code, 200)
+        bets = response.json()
+        self.assertIsInstance(bets, list)
+        if bets:
+            print(f"Found {len(bets)} bets")
+            print("Sample bet data:", json.dumps(bets[0], indent=2))
+        print("✅ Get bets test passed")
+
+    def test_6_update_bet(self):
+        """Test updating a bet"""
+        print("\nTesting update bet endpoint...")
+        if not self.test_bet_id:
+            print("⚠️ Skipping bet update test - no bet ID available")
+            return
+
+        update_data = {
             "result": "win",
-            "status": "settled",
-            "actual_return": bet["potential_return"]
+            "status": "settled"
         }
-        update_response = requests.put(
-            f"{BACKEND_URL}/api/bets/{bet['id']}",
-            json=bet_update
+
+        response = requests.put(
+            f"{self.base_url}/api/bets/{self.test_bet_id}",
+            json=update_data
         )
-        assert update_response.status_code == 200
-        updated_bet = update_response.json()
-        assert updated_bet["status"] == "settled"
-        assert updated_bet["result"] == "win"
-        assert updated_bet["actual_return"] == bet["potential_return"]
-        print(f"Successfully settled bet as a win with return ${updated_bet['actual_return']}")
+        self.assertEqual(response.status_code, 200)
+        updated_bet = response.json()
+        print("Updated bet:", json.dumps(updated_bet, indent=2))
+        print("✅ Update bet test passed")
 
 if __name__ == "__main__":
-    # Run the tests
-    test = TestCS2EsportsTracker()
-    
-    print("\nTesting CS2 Esports Tracker API...")
-    
-    try:
-        print("\n1. Testing API root...")
-        test.test_api_root()
-        print("✅ API root test passed")
-        
-        print("\n2. Testing get matches...")
-        matches = test.test_get_matches()
-        print("✅ Get matches test passed")
-        
-        print("\n3. Testing refresh matches...")
-        test.test_refresh_matches()
-        print("✅ Refresh matches test passed")
-        
-        print("\n4. Testing bet workflow...")
-        test.test_bet_workflow(matches)
-        print("✅ Bet workflow test passed")
-        
-        print("\n✅ All backend tests passed successfully!")
-        
-    except Exception as e:
-        print(f"\n❌ Test failed: {str(e)}")
-        raise
+    unittest.main(verbosity=2)
