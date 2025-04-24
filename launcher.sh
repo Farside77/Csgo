@@ -37,18 +37,25 @@ status "Starting CS2 Esports Tracker..."
 sudo supervisorctl reread
 sudo supervisorctl update
 
-# Check if MongoDB is running, if not, try to start it
-if ! sudo supervisorctl status mongodb | grep -q "RUNNING"; then
-    status "MongoDB not running. Starting MongoDB..."
-    sudo supervisorctl start mongodb
-    sleep 2
+# Check if MongoDB is available and configured
+if command -v mongod &> /dev/null && [ -f "/etc/supervisor/conf.d/mongodb.conf" ]; then
+    # Check if MongoDB is running, if not, try to start it
+    if ! sudo supervisorctl status mongodb | grep -q "RUNNING"; then
+        status "MongoDB not running. Starting MongoDB..."
+        sudo supervisorctl start mongodb
+        sleep 2
+    fi
+    
+    # Restart MongoDB
+    status "Restarting MongoDB..."
+    sudo supervisorctl restart mongodb
+else
+    status "MongoDB not installed or configured. Skipping MongoDB restart."
 fi
 
-# Restart services
-status "Restarting services..."
-sudo supervisorctl restart mongodb
-sudo supervisorctl restart backend
-sudo supervisorctl restart frontend
+# Restart backend and frontend services
+status "Restarting application services..."
+sudo supervisorctl restart backend frontend
 
 # Check services status
 status "Checking service status..."
