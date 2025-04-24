@@ -93,8 +93,8 @@ function App() {
     e.preventDefault();
     
     try {
-      // BACKEND_URL already includes /api prefix
-      const response = await fetch(`${BACKEND_URL}/bets`, {
+      // Add /api prefix to backend URL
+      const response = await fetch(`${BACKEND_URL}/api/bets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
