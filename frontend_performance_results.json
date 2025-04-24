@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-04-24T03:40:19.957879",
+  "frontend_url": "http://localhost:3000",
+  "results": {
+    "Main Page": {
+      "name": "Main Page",
+      "url": "http://localhost:3000",
+      "iterations": 3,
+      "success_rate": 100.0,
+      "avg_time": 0.009705066680908203,
+      "median_time": 0.0045588016510009766,
+      "min_time": 0.004086971282958984,
+      "max_time": 0.02046942710876465,
+      "avg_size": 1.58203125,
+      "analysis": {
+        "external_scripts": 1,
+        "external_styles": 0,
+        "inline_scripts": 0,
+        "inline_styles": 0,
+        "images": 0,
+        "render_blocking": 1
+      }
+    }
+  }
+}
