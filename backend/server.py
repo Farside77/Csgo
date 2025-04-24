@@ -865,14 +865,55 @@ async def refresh_matches():
 async def create_bet(bet: dict = Body(...)):
     """Create a new bet record"""
     try:
+        # Validate required fields
+        required_fields = ["match_id", "team_bet_on", "odds", "stake"]
+        for field in required_fields:
+            if field not in bet:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Missing required field: {field}"
+                )
+        
+        # Validate odds and stake values
+        odds = float(bet["odds"])
+        stake = float(bet["stake"])
+        
+        if odds <= 1.0:
+            raise HTTPException(
+                status_code=400, 
+                detail="Odds must be greater than 1.0"
+            )
+            
+        if stake <= 0:
+            raise HTTPException(
+                status_code=400, 
+                detail="Stake must be greater than 0"
+            )
+        
+        # Verify match exists
+        match = await db.matches.find_one({"id": bet["match_id"]})
+        if not match:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Match with ID {bet['match_id']} not found"
+            )
+        
+        # Verify team exists in the match
+        if bet["team_bet_on"] != match["team1"] and bet["team_bet_on"] != match["team2"]:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Team {bet['team_bet_on']} is not part of this match"
+            )
+        
+        # Create bet record
         bet_id = str(uuid.uuid4())
         bet_record = {
             "id": bet_id,
             "match_id": bet["match_id"],
             "team_bet_on": bet["team_bet_on"],
-            "odds": bet["odds"],
-            "stake": bet["stake"],
-            "potential_return": bet["odds"] * bet["stake"],
+            "odds": odds,
+            "stake": stake,
+            "potential_return": odds * stake,
             "status": "pending",
             "created_at": datetime.now().isoformat()
         }
@@ -881,6 +922,8 @@ async def create_bet(bet: dict = Body(...)):
         bet_record["_id"] = str(result.inserted_id)
         
         return bet_record
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error creating bet: {e}")
         raise HTTPException(status_code=500, detail=str(e))
