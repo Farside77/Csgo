@@ -156,7 +156,10 @@ supervisorctl update
 
 # Start the services
 status "Starting services"
-supervisorctl restart all
+if mongod --version &> /dev/null || [ -f "/etc/supervisor/conf.d/mongodb.conf" ]; then
+    supervisorctl restart mongodb || true
+fi
+supervisorctl restart backend frontend
 
 status "Installation complete!"
 echo ""
