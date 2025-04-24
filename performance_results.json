@@ -1,0 +1,96 @@
+{
+  "timestamp": "2025-04-24T03:39:17.159977",
+  "backend_url": "http://localhost:8001",
+  "results": {
+    "API Root": {
+      "name": "API Root",
+      "url": "http://localhost:8001/api",
+      "method": "GET",
+      "iterations": 5,
+      "success_rate": 100.0,
+      "avg_time": 0.03646111488342285,
+      "median_time": 0.043811798095703125,
+      "min_time": 0.007143497467041016,
+      "max_time": 0.04397416114807129,
+      "p95_time": 0.04397416114807129
+    },
+    "Get Matches": {
+      "name": "Get Matches",
+      "url": "http://localhost:8001/api/matches",
+      "method": "GET",
+      "iterations": 5,
+      "success_rate": 100.0,
+      "avg_time": 0.1823418617248535,
+      "median_time": 0.01568889617919922,
+      "min_time": 0.015557050704956055,
+      "max_time": 0.8470954895019531,
+      "p95_time": 0.8470954895019531
+    },
+    "Get Matches - Filtered": {
+      "name": "Get Matches - Filtered",
+      "url": "http://localhost:8001/api/matches?status=upcoming",
+      "method": "GET",
+      "iterations": 5,
+      "success_rate": 100.0,
+      "avg_time": 0.011634159088134765,
+      "median_time": 0.011957645416259766,
+      "min_time": 0.010399341583251953,
+      "max_time": 0.012601613998413086,
+      "p95_time": 0.012601613998413086
+    },
+    "Get Bets": {
+      "name": "Get Bets",
+      "url": "http://localhost:8001/api/bets",
+      "method": "GET",
+      "iterations": 5,
+      "success_rate": 100.0,
+      "avg_time": 0.03793153762817383,
+      "median_time": 0.04503321647644043,
+      "min_time": 0.005518913269042969,
+      "max_time": 0.04890918731689453,
+      "p95_time": 0.04890918731689453
+    },
+    "Refresh Matches": {
+      "name": "Refresh Matches",
+      "url": "http://localhost:8001/api/refresh-matches",
+      "method": "POST",
+      "iterations": 5,
+      "success_rate": 100.0,
+      "avg_time": 0.194503116607666,
+      "median_time": 0.20094728469848633,
+      "min_time": 0.16663885116577148,
+      "max_time": 0.20496296882629395,
+      "p95_time": 0.20496296882629395
+    },
+    "Get Matches_concurrent": {
+      "name": "Get Matches",
+      "url": "http://localhost:8001/api/matches",
+      "method": "GET",
+      "iterations": 5,
+      "concurrency": 3,
+      "success_rate": 100.0,
+      "total_time": 0.6960768699645996,
+      "throughput": 7.183114704349083,
+      "avg_time": 0.4071547508239746,
+      "median_time": 0.6327435970306396,
+      "min_time": 0.01690983772277832,
+      "max_time": 0.6930301189422607,
+      "p95_time": 0.6930301189422607
+    },
+    "Create Bet_concurrent": {
+      "name": "Create Bet",
+      "url": "http://localhost:8001/api/bets",
+      "method": "POST",
+      "iterations": 5,
+      "concurrency": 3,
+      "success_rate": 0.0,
+      "total_time": 0.0637202262878418,
+      "throughput": 78.46802014502623,
+      "avg_time": 0.02533435821533203,
+      "median_time": 0.014185667037963867,
+      "min_time": 0.011111021041870117,
+      "max_time": 0.04537558555603027,
+      "p95_time": 0.04537558555603027
+    }
+  }
+}
