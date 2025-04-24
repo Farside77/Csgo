@@ -1099,3 +1099,9 @@ async def initialize_team_stats():
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+if __name__ == "__main__":
+    asyncio.create_task(scheduled_match_refresh())
+    # Use localhost instead of 0.0.0.0 for the Electron app
+    # This restricts connections to the local machine only
+    uvicorn.run(app, host="127.0.0.1", port=8001, log_level="info")
