@@ -171,3 +171,8 @@ echo "You can launch the application with: /app/launcher.sh"
 echo ""
 echo "Thank you for installing CS2 Esports Tracker!"
 echo "========================================="
+
+# Keep the terminal window open until the user presses a key
+echo ""
+echo "Press any key to close this window..."
+read -n 1 -s
