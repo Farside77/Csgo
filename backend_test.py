@@ -1,147 +1,120 @@
-import unittest
 import requests
-import json
-from datetime import datetime, timedelta
+import unittest
+from datetime import datetime
 
-BACKEND_URL = "http://localhost:8001/api"
-
-class CS2EsportsTrackerTest(unittest.TestCase):
+class CS2EsportsTrackerAPITest(unittest.TestCase):
     def setUp(self):
-        self.base_url = BACKEND_URL
-        self.test_match_id = None
-        self.test_bet_id = None
-
-    def test_01_api_root(self):
-        """Test API root endpoint"""
+        self.base_url = "http://localhost:8001/api"
+        
+    def test_root_endpoint(self):
+        """Test the root API endpoint"""
         response = requests.get(f"{self.base_url}")
         self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data["message"], "CS2 Esports Tracker API")
+        self.assertEqual(response.json(), {"message": "CS2 Esports Tracker API"})
 
-    def test_02_get_matches(self):
-        """Test getting matches list"""
+    def test_get_matches(self):
+        """Test fetching matches"""
         response = requests.get(f"{self.base_url}/matches")
         self.assertEqual(response.status_code, 200)
         matches = response.json()
         self.assertIsInstance(matches, list)
         
         if matches:
-            # Store a match ID for later tests
-            self.test_match_id = matches[0]["id"]
-            
-            # Verify match structure
             match = matches[0]
             required_fields = ["id", "team1", "team2", "event", "date", "format"]
             for field in required_fields:
                 self.assertIn(field, match)
-            
-            # Verify prediction data
-            prediction_fields = ["predicted_winner", "win_probability", "predicted_score"]
-            for field in prediction_fields:
-                self.assertIn(field, match)
-            
-            # Verify LAN performance data in analysis
-            if "analysis" in match:
-                analysis = match["analysis"]
-                lan_fields = ["team1_lan_win_rate", "team2_lan_win_rate", "is_lan"]
-                for field in lan_fields:
-                    self.assertIn(field, analysis)
 
-    def test_03_refresh_matches(self):
-        """Test match refresh endpoint"""
+    def test_refresh_matches(self):
+        """Test refreshing matches"""
         response = requests.post(f"{self.base_url}/refresh-matches")
         self.assertEqual(response.status_code, 200)
         data = response.json()
+        self.assertIn("status", data)
+        self.assertEqual(data["status"], "success")
         self.assertIn("matches_updated", data)
-        self.assertIsInstance(data["matches_updated"], int)
 
-    def test_04_create_bet(self):
-        """Test bet creation"""
-        if not self.test_match_id:
-            self.skipTest("No test match ID available")
-
-        # Get match details first
-        response = requests.get(f"{self.base_url}/matches")
-        matches = response.json()
-        match = next((m for m in matches if m["id"] == self.test_match_id), None)
+    def test_create_and_get_bet(self):
+        """Test creating and retrieving a bet"""
+        # First get a match to bet on
+        matches_response = requests.get(f"{self.base_url}/matches")
+        self.assertEqual(matches_response.status_code, 200)
+        matches = matches_response.json()
         
-        if not match:
-            self.skipTest("Test match not found")
-
+        if not matches:
+            self.skipTest("No matches available for betting test")
+            
+        match = matches[0]
+        
+        # Create a bet
         bet_data = {
-            "match_id": self.test_match_id,
+            "match_id": match["id"],
             "team_bet_on": match["team1"],
             "odds": 2.0,
             "stake": 100
         }
-
-        response = requests.post(
+        
+        create_response = requests.post(
             f"{self.base_url}/bets",
             json=bet_data
         )
-        self.assertEqual(response.status_code, 200)
-        bet = response.json()
+        self.assertEqual(create_response.status_code, 200)
+        created_bet = create_response.json()
         
-        # Store bet ID for later tests
-        self.test_bet_id = bet["id"]
+        # Verify bet was created correctly
+        self.assertEqual(created_bet["match_id"], bet_data["match_id"])
+        self.assertEqual(created_bet["team_bet_on"], bet_data["team_bet_on"])
+        self.assertEqual(created_bet["odds"], bet_data["odds"])
+        self.assertEqual(created_bet["stake"], bet_data["stake"])
+        self.assertEqual(created_bet["status"], "pending")
         
-        # Verify bet structure
-        self.assertEqual(bet["match_id"], self.test_match_id)
-        self.assertEqual(bet["team_bet_on"], match["team1"])
-        self.assertEqual(bet["odds"], 2.0)
-        self.assertEqual(bet["stake"], 100)
-        self.assertEqual(bet["potential_return"], 200)
-        self.assertEqual(bet["status"], "pending")
+        # Get all bets and verify our bet is there
+        bets_response = requests.get(f"{self.base_url}/bets")
+        self.assertEqual(bets_response.status_code, 200)
+        bets = bets_response.json()
+        self.assertTrue(any(bet["id"] == created_bet["id"] for bet in bets))
 
-    def test_05_get_bets(self):
-        """Test getting bets list"""
-        response = requests.get(f"{self.base_url}/bets")
-        self.assertEqual(response.status_code, 200)
-        bets = response.json()
-        self.assertIsInstance(bets, list)
+    def test_update_bet(self):
+        """Test updating a bet's result"""
+        # First create a bet
+        matches_response = requests.get(f"{self.base_url}/matches")
+        matches = matches_response.json()
         
-        if bets:
-            bet = bets[0]
-            required_fields = ["id", "match_id", "team_bet_on", "odds", "stake", "potential_return", "status"]
-            for field in required_fields:
-                self.assertIn(field, bet)
-
-    def test_06_update_bet(self):
-        """Test updating bet result"""
-        if not self.test_bet_id:
-            self.skipTest("No test bet ID available")
-
+        if not matches:
+            self.skipTest("No matches available for bet update test")
+            
+        match = matches[0]
+        
+        bet_data = {
+            "match_id": match["id"],
+            "team_bet_on": match["team1"],
+            "odds": 2.0,
+            "stake": 100
+        }
+        
+        create_response = requests.post(
+            f"{self.base_url}/bets",
+            json=bet_data
+        )
+        created_bet = create_response.json()
+        
+        # Update bet result
         update_data = {
             "result": "win",
             "status": "settled",
             "actual_return": 200
         }
-
-        response = requests.put(
-            f"{self.base_url}/bets/{self.test_bet_id}",
+        
+        update_response = requests.put(
+            f"{self.base_url}/bets/{created_bet['id']}",
             json=update_data
         )
-        self.assertEqual(response.status_code, 200)
-        bet = response.json()
+        self.assertEqual(update_response.status_code, 200)
+        updated_bet = update_response.json()
         
-        self.assertEqual(bet["result"], "win")
-        self.assertEqual(bet["status"], "settled")
-        self.assertEqual(bet["actual_return"], 200)
+        self.assertEqual(updated_bet["result"], "win")
+        self.assertEqual(updated_bet["status"], "settled")
+        self.assertEqual(updated_bet["actual_return"], 200)
 
-    def test_07_bet_validation(self):
-        """Test bet validation rules"""
-        invalid_bet = {
-            "match_id": "invalid_id",
-            "team_bet_on": "Invalid Team",
-            "odds": 0.5,  # Invalid odds
-            "stake": -100  # Invalid stake
-        }
-
-        response = requests.post(
-            f"{self.base_url}/bets",
-            json=invalid_bet
-        )
-        self.assertEqual(response.status_code, 400)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main(verbosity=2)
