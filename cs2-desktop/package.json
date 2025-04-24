@@ -8,5 +8,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "electron": "^35.2.1",
+    "electron-builder": "^26.0.12"
+  }
 }
