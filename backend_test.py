@@ -1,74 +1,145 @@
-import unittest
 import requests
-import json
-from datetime import datetime
+import pytest
+from datetime import datetime, timedelta
+import uuid
 
-class CS2EsportsTrackerAPITest(unittest.TestCase):
-    def setUp(self):
-        self.base_url = "http://localhost:8001"
-        self.test_match_id = None
-        self.test_bet_id = None
+BACKEND_URL = "https://backend-cs2-esports-tracker.zanity.net/api"
 
-    def test_1_api_root(self):
-        """Test API root endpoint"""
-        print("\nTesting API root endpoint...")
-        response = requests.get(f"{self.base_url}/api")
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("message", response.json())
+class TestCS2EsportsTracker:
+    def setup_method(self):
+        self.base_url = BACKEND_URL
+        
+    def test_api_root(self):
+        """Test the API root endpoint"""
+        response = requests.get(f"{self.base_url}")
+        assert response.status_code == 200
+        assert "message" in response.json()
         print("✅ API root endpoint test passed")
 
-    def test_2_get_matches(self):
-        """Test getting matches"""
-        print("\nTesting get matches endpoint...")
-        response = requests.get(f"{self.base_url}/api/matches")
-        self.assertEqual(response.status_code, 200)
+    def test_get_matches(self):
+        """Test fetching matches"""
+        response = requests.get(f"{self.base_url}/matches")
+        assert response.status_code == 200
         matches = response.json()
-        self.assertIsInstance(matches, list)
-        if matches:
-            self.test_match_id = matches[0]["id"]
-            print(f"Found {len(matches)} matches")
+        assert isinstance(matches, list)
+        
+        if len(matches) > 0:
+            match = matches[0]
+            required_fields = ['id', 'team1', 'team2', 'event', 'date', 'format', 
+                             'team1_odds', 'team2_odds', 'predicted_winner', 
+                             'win_probability', 'predicted_score']
+            for field in required_fields:
+                assert field in match
         print("✅ Get matches test passed")
 
-    def test_3_refresh_matches(self):
-        """Test refreshing matches"""
-        print("\nTesting refresh matches endpoint...")
-        response = requests.post(f"{self.base_url}/api/refresh-matches")
-        self.assertEqual(response.status_code, 200)
-        result = response.json()
-        self.assertIn("matches_updated", result)
-        print(f"✅ Refreshed {result['matches_updated']} matches")
+    def test_refresh_matches(self):
+        """Test match refresh endpoint"""
+        response = requests.post(f"{self.base_url}/refresh-matches")
+        assert response.status_code == 200
+        data = response.json()
+        assert "matches_updated" in data
+        print("✅ Refresh matches test passed")
 
-    def test_4_create_bet(self):
-        """Test creating a bet"""
-        print("\nTesting create bet endpoint...")
-        if not self.test_match_id:
-            print("⚠️ Skipping bet creation test - no match ID available")
-            return
-
+    def test_bet_workflow(self):
+        """Test complete bet workflow"""
+        # 1. Get matches to place a bet
+        matches_response = requests.get(f"{self.base_url}/matches")
+        assert matches_response.status_code == 200
+        matches = matches_response.json()
+        assert len(matches) > 0
+        
+        match = matches[0]
+        
+        # 2. Create a bet
         bet_data = {
-            "match_id": self.test_match_id,
-            "team_bet_on": "Team1",
-            "odds": 1.5,
-            "stake": 10.0
+            "match_id": match["id"],
+            "team_bet_on": match["team1"],
+            "odds": match["team1_odds"],
+            "stake": 100
         }
-
-        response = requests.post(
-            f"{self.base_url}/api/bets",
+        
+        create_bet_response = requests.post(
+            f"{self.base_url}/bets",
             json=bet_data
         )
-        self.assertEqual(response.status_code, 200)
-        bet = response.json()
-        self.test_bet_id = bet["id"]
-        print("✅ Created bet successfully")
+        assert create_bet_response.status_code == 200
+        bet = create_bet_response.json()
+        assert "id" in bet
+        bet_id = bet["id"]
+        
+        # 3. Get all bets
+        get_bets_response = requests.get(f"{self.base_url}/bets")
+        assert get_bets_response.status_code == 200
+        bets = get_bets_response.json()
+        assert len(bets) > 0
+        
+        # 4. Update bet result
+        update_data = {
+            "result": "win",
+            "status": "settled",
+            "actual_return": bet["potential_return"]
+        }
+        update_response = requests.put(
+            f"{self.base_url}/bets/{bet_id}",
+            json=update_data
+        )
+        assert update_response.status_code == 200
+        updated_bet = update_response.json()
+        assert updated_bet["status"] == "settled"
+        assert updated_bet["result"] == "win"
+        
+        print("✅ Complete bet workflow test passed")
 
-    def test_5_get_bets(self):
-        """Test getting bets"""
-        print("\nTesting get bets endpoint...")
-        response = requests.get(f"{self.base_url}/api/bets")
-        self.assertEqual(response.status_code, 200)
-        bets = response.json()
-        self.assertIsInstance(bets, list)
-        print(f"✅ Found {len(bets)} bets")
+    def test_odds_sources(self):
+        """Test odds from multiple sources"""
+        response = requests.get(f"{self.base_url}/matches")
+        assert response.status_code == 200
+        matches = response.json()
+        
+        if len(matches) > 0:
+            match = matches[0]
+            # Check if odds sources are present
+            assert "odds_sources" in match
+            assert "hltv" in match["odds_sources"]
+            assert "ggbet" in match["odds_sources"]
+            print("✅ Odds sources test passed")
+        else:
+            print("⚠️ No matches found to test odds sources")
+
+    def test_prediction_model(self):
+        """Test enhanced prediction model"""
+        response = requests.get(f"{self.base_url}/matches")
+        assert response.status_code == 200
+        matches = response.json()
+        
+        if len(matches) > 0:
+            match = matches[0]
+            # Verify prediction fields
+            assert "predicted_winner" in match
+            assert "win_probability" in match
+            assert "predicted_score" in match
+            assert "ev_value" in match
+            
+            # Validate probability range
+            assert 0 <= match["win_probability"] <= 1
+            print("✅ Prediction model test passed")
+        else:
+            print("⚠️ No matches found to test prediction model")
 
 if __name__ == "__main__":
-    unittest.main(verbosity=2)
+    # Create test instance
+    tester = TestCS2EsportsTracker()
+    
+    # Run all tests
+    print("\n🔍 Running CS2 Esports Tracker API Tests...")
+    
+    try:
+        tester.test_api_root()
+        tester.test_get_matches()
+        tester.test_refresh_matches()
+        tester.test_bet_workflow()
+        tester.test_odds_sources()
+        tester.test_prediction_model()
+        print("\n✅ All tests completed successfully!")
+    except Exception as e:
+        print(f"\n❌ Tests failed: {str(e)}")
