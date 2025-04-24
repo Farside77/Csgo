@@ -30,14 +30,39 @@
       "backend/**/*",
       "main.js",
       "preload.js",
-      "package.json"
+      "package.json",
+      "install-deps.js"
     ],
     "extraResources": [
-      "backend/**/*"
+      "backend/**/*",
+      "resources/**/*"
+    ],
+    "extraFiles": [
+      "node_modules/python-shell/**/*",
+      "node_modules/execa/**/*"
     ],
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "CS2 Esports Tracker",
+      "include": "installer.nsh",
+      "runAfterFinish": true,
+      "installerIcon": "build/favicon.ico",
+      "uninstallerIcon": "build/favicon.ico",
+      "installerHeaderIcon": "build/favicon.ico"
     },
     "mac": {
       "target": "dmg",
