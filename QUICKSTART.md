@@ -1,30 +1,37 @@
 # CS2 Esports Tracker Quick Start Guide
 
-## Option 1: GUI Method (Recommended)
+## When You See "Command Not Found" Error
+
+If you're getting "command not found" when running the scripts, try these alternatives:
+
+## Option 1: Use the START_HERE.sh Script (Recommended)
 
 1. Open a terminal window
-2. Enter the following command:
+2. Run this command:
    ```
-   xterm -hold -e "/app/simple_launcher.sh" &
+   sh /app/START_HERE.sh
    ```
-   If xterm is not available, try one of these alternatives:
-   ```
-   gnome-terminal -- bash -c "/app/simple_launcher.sh; exec bash" &
-   ```
-   ```
-   konsole -e "bash -c '/app/simple_launcher.sh; exec bash'" &
-   ```
+   This uses `sh` which should be available on all systems.
 
-## Option 2: Command Line Method
+## Option 2: Minimal Start (Most Compatible)
 
 1. Open a terminal window
-2. Enter the following command:
+2. Run this command:
    ```
-   sudo /app/simple_launcher.sh
+   sh /app/minimal_start.sh
    ```
-   This will start the application. The terminal will stay open with status information.
 
-## Option 3: Test Terminal Method
+## Option 3: Start Directly with Supervisor
+
+1. Open a terminal window
+2. Run these commands:
+   ```
+   sudo supervisorctl start mongodb
+   sudo supervisorctl start backend
+   sudo supervisorctl start frontend
+   ```
+
+## Option 4: HTML Instructions
 
 If you're having issues with terminals closing too quickly, try:
 ```
