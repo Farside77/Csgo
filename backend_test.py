@@ -5,7 +5,7 @@ from datetime import datetime
 
 class CS2EsportsTrackerAPITest(unittest.TestCase):
     def setUp(self):
-        self.base_url = "https://backend-cs2-esports-tracker-vwkm.onrender.com"
+        self.base_url = "http://localhost:8001"
         self.test_match_id = None
         self.test_bet_id = None
 
