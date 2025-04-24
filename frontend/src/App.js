@@ -46,7 +46,7 @@ function App() {
 
   const fetchBets = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/bets`);
+      const response = await fetch(`${BACKEND_URL}/bets`);
       
       if (!response.ok) {
         throw new Error(`Error fetching bets: ${response.statusText}`);
