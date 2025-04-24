@@ -27,7 +27,7 @@ function App() {
   const fetchMatches = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${BACKEND_URL}/matches`);
+      const response = await fetch(`${BACKEND_URL}/api/matches`);
       
       if (!response.ok) {
         throw new Error(`Error fetching matches: ${response.statusText}`);
@@ -46,7 +46,7 @@ function App() {
 
   const fetchBets = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/bets`);
+      const response = await fetch(`${BACKEND_URL}/api/bets`);
       
       if (!response.ok) {
         throw new Error(`Error fetching bets: ${response.statusText}`);
@@ -62,7 +62,7 @@ function App() {
   const refreshMatches = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch(`${BACKEND_URL}/refresh-matches`, {
+      const response = await fetch(`${BACKEND_URL}/api/refresh-matches`, {
         method: 'POST',
       });
       
