@@ -83,7 +83,7 @@ function App() {
     e.preventDefault();
     
     try {
-      const response = await fetch(`${BACKEND_URL}/api/bets`, {
+      const response = await fetch(`${BACKEND_URL}/bets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
