@@ -382,6 +382,18 @@ def generate_sample_matches():
     # This would be done asynchronously in a real app, but we'll use a simpler approach
     # for the sample data
     
+    # Insert past matches into database for analysis
+    for past_match in past_matches:
+        try:
+            # Don't block the main function, just store silently
+            db.matches.update_one(
+                {"id": past_match["id"]},
+                {"$set": past_match},
+                upsert=True
+            )
+        except Exception as e:
+            logger.error(f"Error storing past match: {e}")
+    
     return matches
 
 async def calculate_match_predictions(match):
