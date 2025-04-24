@@ -122,7 +122,7 @@ function App() {
       
       const actual_return = result === 'win' ? betToUpdate.potential_return : 0;
       
-      const response = await fetch(`${BACKEND_URL}/api/bets/${betId}`, {
+      const response = await fetch(`${BACKEND_URL}/bets/${betId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
