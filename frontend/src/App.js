@@ -91,7 +91,8 @@ function App() {
     e.preventDefault();
     
     try {
-      const response = await fetch(`${BACKEND_URL}/api/bets`, {
+      // BACKEND_URL already includes /api prefix
+      const response = await fetch(`${BACKEND_URL}/bets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -130,7 +131,8 @@ function App() {
       
       const actual_return = result === 'win' ? betToUpdate.potential_return : 0;
       
-      const response = await fetch(`${BACKEND_URL}/api/bets/${betId}`, {
+      // BACKEND_URL already includes /api prefix
+      const response = await fetch(`${BACKEND_URL}/bets/${betId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
