@@ -527,6 +527,223 @@ body {
   background-color: var(--primary-dark);
 }
 
+/* Match Analysis Styles */
+.analysis-modal {
+  max-width: 800px;
+}
+
+.analysis-section {
+  margin-bottom: 20px;
+}
+
+.analysis-section h4 {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+}
+
+.prediction-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.win-probability {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.team-probability {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.team-name {
+  font-weight: 600;
+  min-width: 120px;
+}
+
+.probability-bar, .win-rate-bar {
+  flex: 1;
+  height: 24px;
+  background-color: #eaecef;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.probability-fill, .win-rate-fill {
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: width 0.3s ease;
+}
+
+.probability-fill.team1, .win-rate-fill.team1 {
+  background-color: var(--primary-color);
+}
+
+.probability-fill.team2, .win-rate-fill.team2 {
+  background-color: var(--secondary-color);
+}
+
+.probability-text, .win-rate-text {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  color: white;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.prediction-details {
+  background-color: #f0f4f8;
+  padding: 15px;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.map-pool {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.map-analysis {
+  background-color: #f0f4f8;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+.map-name {
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.map-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.team-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.recommendation {
+  background-color: #f0f4f8;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+.recommended-bet {
+  border-left: 4px solid;
+  padding-left: 10px;
+}
+
+.recommended-bet.positive {
+  border-color: var(--success-color);
+}
+
+.recommended-bet.neutral {
+  border-color: var(--warning-color);
+}
+
+.recommended-bet.negative {
+  border-color: var(--danger-color);
+}
+
+.recommendation-header {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.recommendation-details {
+  margin-bottom: 10px;
+}
+
+.recommendation-explanation {
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+/* Match Filter */
+.filter-controls {
+  margin-bottom: 20px;
+  background-color: var(--card-background);
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 150px;
+}
+
+.filter-label {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-bottom: 5px;
+  display: block;
+}
+
+.filter-select, .filter-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.filter-option {
+  background: none;
+  border: 1px solid var(--border-color);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-option:hover, .filter-option.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.filter-reset {
+  background-color: transparent;
+  border: none;
+  color: var(--text-light);
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .matches-list {
@@ -560,5 +777,14 @@ body {
   .bet-actions {
     width: 100%;
     justify-content: space-between;
+  }
+  
+  .team-probability, .team-stat {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .probability-bar, .win-rate-bar {
+    width: 100%;
   }
 }
