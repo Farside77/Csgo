@@ -136,9 +136,19 @@ async def fetch_hltv_matches():
                         format_element = match_element.select_one('.matchMeta')
                         match_format = format_element.text.strip() if format_element else "Unknown Format"
                         
-                        # Add odds (normally would be scraped)
-                        team1_odds = round(1.5 + (0.5 * (hash(team1) % 10) / 10), 2)
-                        team2_odds = round(1.5 + (0.5 * (hash(team2) % 10) / 10), 2)
+                        # For real implementation, we would fetch odds from multiple bookmakers
+                        # and store them for comparison
+                        hltv_odds = await fetch_hltv_odds(match_id)
+                        ggbet_odds = await fetch_ggbet_odds(team1, team2)
+                        
+                        # Use the best odds available
+                        team1_odds = max(hltv_odds.get("team1", 0), ggbet_odds.get("team1", 0))
+                        team2_odds = max(hltv_odds.get("team2", 0), ggbet_odds.get("team2", 0))
+                        
+                        # If we couldn't get real odds, generate some reasonable ones
+                        if team1_odds == 0 or team2_odds == 0:
+                            team1_odds = round(1.5 + (0.5 * (hash(team1) % 10) / 10), 2)
+                            team2_odds = round(1.5 + (0.5 * (hash(team2) % 10) / 10), 2)
                         
                         # Create match object
                         match = {
@@ -150,6 +160,10 @@ async def fetch_hltv_matches():
                             "format": match_format,
                             "team1_odds": team1_odds,
                             "team2_odds": team2_odds,
+                            "odds_sources": {
+                                "hltv": hltv_odds,
+                                "ggbet": ggbet_odds
+                            },
                             "status": "upcoming"
                         }
                         
@@ -169,6 +183,51 @@ async def fetch_hltv_matches():
         logger.error(f"Error fetching HLTV matches: {e}")
         logger.info("Falling back to sample data")
         return generate_sample_matches()
+
+
+async def fetch_hltv_odds(match_id):
+    """
+    Fetch odds from HLTV for a specific match
+    In a real implementation, this would scrape the odds from the match page
+    """
+    try:
+        # This is a placeholder for actual scraping
+        # In a real implementation, we would fetch the match page and extract the odds
+        return {
+            "team1": 0,
+            "team2": 0
+        }
+    except Exception as e:
+        logger.error(f"Error fetching HLTV odds: {e}")
+        return {
+            "team1": 0,
+            "team2": 0
+        }
+
+
+async def fetch_ggbet_odds(team1, team2):
+    """
+    Fetch odds from GG.Bet for a specific match
+    In a real implementation, this would use their API or scrape their site
+    """
+    try:
+        # This is a placeholder for actual API calls or scraping
+        # In a real implementation, we would:
+        # 1. Search for the match on GG.Bet
+        # 2. Extract the odds for each team
+        
+        # For now, we'll return some simulated odds
+        # In real life, these would be the actual odds from GG.Bet
+        return {
+            "team1": round(1.6 + (0.6 * (hash(team1) % 10) / 10), 2),
+            "team2": round(1.6 + (0.6 * (hash(team2) % 10) / 10), 2)
+        }
+    except Exception as e:
+        logger.error(f"Error fetching GG.Bet odds: {e}")
+        return {
+            "team1": 0,
+            "team2": 0
+        }
 
 
 def generate_sample_matches():
