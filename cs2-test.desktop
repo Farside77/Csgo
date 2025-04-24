@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=CS2 Terminal Test
+Comment=Test if the terminal stays open
+Exec=/app/launch_test.sh
+Terminal=false
+Categories=Game;Utility;
