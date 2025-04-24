@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 Esports Tracker - Standalone Test</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            background-color: #f5f7fa;
+        }
+        h1, h2, h3 {
+            color: #5d87ff;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .card-header {
+            background-color: #f0f4f8;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-body {
+            padding: 15px;
+        }
+        .match-teams {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            align-items: center;
+        }
+        .team {
+            font-weight: 600;
+            text-align: center;
+            padding: 10px;
+            flex: 1;
+        }
+        .vs {
+            color: #777;
+            padding: 0 10px;
+        }
+        button {
+            background-color: #5d87ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #4a6ecc;
+        }
+        button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+        pre {
+            background-color: #f0f4f8;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+            max-height: 400px;
+        }
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+        .success {
+            color: #4caf50;
+        }
+        .error {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <h1>CS2 Esports Tracker - Standalone Test</h1>
+    <p>This page tests the core functionality of the CS2 Esports Tracker through direct API calls.</p>
+
+    <div>
+        <button onclick="testApiRoot()">Test API Root</button>
+        <button onclick="testGetMatches()">Get Matches</button>
+        <button onclick="testRefreshMatches()">Refresh Matches</button>
+        <button onclick="testGetBets()">Get Bets</button>
+        <button onclick="testCreateBet()">Create Test Bet</button>
+        <button onclick="testLANPerformance()">Check LAN Performance</button>
+    </div>
+
+    <h2>Test Results</h2>
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'http://localhost:8001/api';
+        let testMatchId = null;
+        let testBetId = null;
+
+        // Helper function to append results
+        function appendResult(title, content, isSuccess = true) {
+            const resultDiv = document.getElementById('results');
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            const header = document.createElement('div');
+            header.className = 'card-header';
+            
+            const titleEl = document.createElement('h3');
+            titleEl.textContent = title;
+            
+            const statusEl = document.createElement('span');
+            statusEl.className = isSuccess ? 'success' : 'error';
+            statusEl.textContent = isSuccess ? '✅ Passed' : '❌ Failed';
+            
+            header.appendChild(titleEl);
+            header.appendChild(statusEl);
+            
+            const body = document.createElement('div');
+            body.className = 'card-body';
+            
+            if (typeof content === 'string') {
+                body.innerHTML = content;
+            } else if (content instanceof HTMLElement) {
+                body.appendChild(content);
+            } else {
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(content, null, 2);
+                body.appendChild(pre);
+            }
+            
+            card.appendChild(header);
+            card.appendChild(body);
+            
+            resultDiv.insertBefore(card, resultDiv.firstChild);
+        }
+
+        // Test API root endpoint
+        async function testApiRoot() {
+            try {
+                const response = await fetch(`${API_URL}`);
+                const data = await response.json();
+                
+                if (response.ok && data.message === "CS2 Esports Tracker API") {
+                    appendResult('API Root Test', data, true);
+                    return true;
+                } else {
+                    appendResult('API Root Test', `Expected message not found: ${JSON.stringify(data)}`, false);
+                    return false;
+                }
+            } catch (error) {
+                appendResult('API Root Test', `Error: ${error.message}`, false);
+                return false;
+            }
+        }
+
+        // Test getting matches
+        async function testGetMatches() {
+            try {
+                const response = await fetch(`${API_URL}/matches`);
+                const data = await response.json();
+                
+                if (response.ok && Array.isArray(data) && data.length > 0) {
+                    // Save a match ID for later tests
+                    testMatchId = data[0].id;
+                    
+                    // Create a summary
+                    const summary = document.createElement('div');
+                    summary.innerHTML = `
+                        <p>Found ${data.length} matches</p>
+                        <p>Sample match: ${data[0].team1} vs ${data[0].team2}</p>
+                        <p>Match ID for tests: ${testMatchId}</p>
+                    `;
+                    
+                    const detailsToggle = document.createElement('button');
+                    detailsToggle.textContent = 'Show Full Match Data';
+                    detailsToggle.onclick = function() {
+                        const pre = this.nextElementSibling;
+                        if (pre.style.display === 'none') {
+                            pre.style.display = 'block';
+                            this.textContent = 'Hide Full Match Data';
+                        } else {
+                            pre.style.display = 'none';
+                            this.textContent = 'Show Full Match Data';
+                        }
+                    };
+                    summary.appendChild(detailsToggle);
+                    
+                    const pre = document.createElement('pre');
+                    pre.textContent = JSON.stringify(data[0], null, 2);
+                    pre.style.display = 'none';
+                    summary.appendChild(pre);
+                    
+                    appendResult('Get Matches Test', summary, true);
+                    return true;
+                } else {
+                    appendResult('Get Matches Test', `No matches found or invalid response: ${JSON.stringify(data)}`, false);
+                    return false;
+                }
+            } catch (error) {
+                appendResult('Get Matches Test', `Error: ${error.message}`, false);
+                return false;
+            }
+        }
+
+        // Test refreshing matches
+        async function testRefreshMatches() {
+            try {
+                const response = await fetch(`${API_URL}/refresh-matches`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.status === "success") {
+                    appendResult('Refresh Matches Test', `Successfully refreshed ${data.matches_updated} matches`, true);
+                    await testGetMatches();  // Refresh the match list
+                    return true;
+                } else {
+                    appendResult('Refresh Matches Test', `Unexpected response: ${JSON.stringify(data)}`, false);
+                    return false;
+                }
+            } catch (error) {
+                appendResult('Refresh Matches Test', `Error: ${error.message}`, false);
+                return false;
+            }
+        }
+
+        // Test getting bets
+        async function testGetBets() {
+            try {
+                const response = await fetch(`${API_URL}/bets`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Create a summary
+                    const summary = document.createElement('div');
+                    summary.innerHTML = `<p>Found ${data.length} bets</p>`;
+                    
+                    if (data.length > 0) {
+                        // Save a bet ID for later tests
+                        testBetId = data[0].id;
+                        summary.innerHTML += `<p>Bet ID for tests: ${testBetId}</p>`;
+                        
+                        const detailsToggle = document.createElement('button');
+                        detailsToggle.textContent = 'Show Full Bet Data';
+                        detailsToggle.onclick = function() {
+                            const pre = this.nextElementSibling;
+                            if (pre.style.display === 'none') {
+                                pre.style.display = 'block';
+                                this.textContent = 'Hide Full Bet Data';
+                            } else {
+                                pre.style.display = 'none';
+                                this.textContent = 'Show Full Bet Data';
+                            }
+                        };
+                        summary.appendChild(detailsToggle);
+                        
+                        const pre = document.createElement('pre');
+                        pre.textContent = JSON.stringify(data[0], null, 2);
+                        pre.style.display = 'none';
+                        summary.appendChild(pre);
+                    }
+                    
+                    appendResult('Get Bets Test', summary, true);
+                    return true;
+                } else {
+                    appendResult('Get Bets Test', `Unexpected response: ${JSON.stringify(data)}`, false);
+                    return false;
+                }
+            } catch (error) {
+                appendResult('Get Bets Test', `Error: ${error.message}`, false);
+                return false;
+            }
+        }
+
+        // Test creating a bet
+        async function testCreateBet() {
+            if (!testMatchId) {
+                appendResult('Create Bet Test', 'No match ID available. Please run "Get Matches" test first.', false);
+                return false;
+            }
+            
+            try {
+                // Get match details to find team names
+                const matchResponse = await fetch(`${API_URL}/matches`);
+                const matches = await matchResponse.json();
+                const match = matches.find(m => m.id === testMatchId);
+                
+                if (!match) {
+                    appendResult('Create Bet Test', `Match with ID ${testMatchId} not found.`, false);
+                    return false;
+                }
+                
+                // Create bet data
+                const betData = {
+                    match_id: testMatchId,
+                    team_bet_on: match.team1,
+                    odds: 2.0,
+                    stake: 100
+                };
+                
+                const response = await fetch(`${API_URL}/bets`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(betData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.id) {
+                    // Save the bet ID for later tests
+                    testBetId = data.id;
+                    
+                    const summary = document.createElement('div');
+                    summary.innerHTML = `
+                        <p>Successfully created bet on ${match.team1}</p>
+                        <p>Bet ID: ${data.id}</p>
+                        <p>Odds: ${data.odds}</p>
+                        <p>Stake: $${data.stake}</p>
+                        <p>Potential Return: $${data.potential_return}</p>
+                    `;
+                    
+                    // Add a button to update the bet
+                    const updateButton = document.createElement('button');
+                    updateButton.textContent = 'Mark as Win';
+                    updateButton.onclick = () => testUpdateBet(data.id, 'win');
+                    summary.appendChild(updateButton);
+                    
+                    const updateButton2 = document.createElement('button');
+                    updateButton2.textContent = 'Mark as Loss';
+                    updateButton2.style.marginLeft = '10px';
+                    updateButton2.onclick = () => testUpdateBet(data.id, 'loss');
+                    summary.appendChild(updateButton2);
+                    
+                    appendResult('Create Bet Test', summary, true);
+                    
+                    // Refresh the bets list
+                    await testGetBets();
+                    return true;
+                } else {
+                    appendResult('Create Bet Test', `Error creating bet: ${JSON.stringify(data)}`, false);
+                    return false;
+                }
+            } catch (error) {
+                appendResult('Create Bet Test', `Error: ${error.message}`, false);
+                return false;
+            }
+        }
+
+        // Test updating a bet
+        async function testUpdateBet(betId, result) {
+            try {
+                const updateData = {
+                    result: result,
+                    status: 'settled',
+                    actual_return: result === 'win' ? 200 : 0
+                };
+                
+                const response = await fetch(`${API_URL}/bets/${betId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const summary = document.createElement('div');
+                    summary.innerHTML = `
+                        <p>Successfully updated bet status to ${result}</p>
+                        <p>Bet ID: ${data.id}</p>
+                        <p>New Status: ${data.status}</p>
+                        <p>Result: ${data.result}</p>
+                        <p>Actual Return: $${data.actual_return}</p>
+                    `;
+                    
+                    appendResult('Update Bet Test', summary, true);
+                    
+                    // Refresh the bets list
+                    await testGetBets();
+                    return true;
+                } else {
+                    appendResult('Update Bet Test', `Error updating bet: ${JSON.stringify(data)}`, false);
+                    return false;
+                }
+            } catch (error) {
+                appendResult('Update Bet Test', `Error: ${error.message}`, false);
+                return false;
+            }
+        }
+
+        // Test LAN performance analysis
+        async function testLANPerformance() {
+            if (!testMatchId) {
+                appendResult('LAN Performance Test', 'No match ID available. Please run "Get Matches" test first.', false);
+                return false;
+            }
+            
+            try {
+                // Get match details to find LAN analysis
+                const matchResponse = await fetch(`${API_URL}/matches`);
+                const matches = await matchResponse.json();
+                const match = matches.find(m => m.analysis && (m.analysis.team1_lan_win_rate || m.analysis.team2_lan_win_rate));
+                
+                if (!match) {
+                    appendResult('LAN Performance Test', 'No matches with LAN analysis found.', false);
+                    return false;
+                }
+                
+                // Extract LAN performance data
+                const analysis = match.analysis;
+                const summary = document.createElement('div');
+                
+                summary.innerHTML = `
+                    <p><strong>Match:</strong> ${match.team1} vs ${match.team2}</p>
+                    <p><strong>Event:</strong> ${match.event}</p>
+                    <p><strong>Format:</strong> ${match.format}</p>
+                    <p><strong>Event Type:</strong> ${analysis.is_lan ? '🏆 LAN Event' : '🌐 Online Event'}</p>
+                    <h4>Team Performance</h4>
+                `;
+                
+                // Team 1 LAN data
+                if (analysis.team1_lan_win_rate) {
+                    summary.innerHTML += `
+                        <div style="margin-bottom: 15px;">
+                            <strong>${match.team1}</strong>
+                            <div>LAN Win Rate: ${(analysis.team1_lan_win_rate * 100).toFixed(0)}%</div>
+                            <div>Online Win Rate: ${(analysis.team1_online_win_rate * 100).toFixed(0)}%</div>
+                            <div>Roster Stability: ${(analysis.team1_roster_stability * 100).toFixed(0)}%</div>
+                            <div>Last Roster Change: ${analysis.team1_days_since_roster_change} days ago</div>
+                        </div>
+                    `;
+                }
+                
+                // Team 2 LAN data
+                if (analysis.team2_lan_win_rate) {
+                    summary.innerHTML += `
+                        <div>
+                            <strong>${match.team2}</strong>
+                            <div>LAN Win Rate: ${(analysis.team2_lan_win_rate * 100).toFixed(0)}%</div>
+                            <div>Online Win Rate: ${(analysis.team2_online_win_rate * 100).toFixed(0)}%</div>
+                            <div>Roster Stability: ${(analysis.team2_roster_stability * 100).toFixed(0)}%</div>
+                            <div>Last Roster Change: ${analysis.team2_days_since_roster_change} days ago</div>
+                        </div>
+                    `;
+                }
+                
+                // Add note about weighting
+                summary.innerHTML += `
+                    <p><em>Note: LAN performances are weighted 3x higher than online matches in our prediction model.</em></p>
+                `;
+                
+                const detailsToggle = document.createElement('button');
+                detailsToggle.textContent = 'Show Full Analysis Data';
+                detailsToggle.onclick = function() {
+                    const pre = this.nextElementSibling;
+                    if (pre.style.display === 'none') {
+                        pre.style.display = 'block';
+                        this.textContent = 'Hide Full Analysis Data';
+                    } else {
+                        pre.style.display = 'none';
+                        this.textContent = 'Show Full Analysis Data';
+                    }
+                };
+                summary.appendChild(detailsToggle);
+                
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(analysis, null, 2);
+                pre.style.display = 'none';
+                summary.appendChild(pre);
+                
+                appendResult('LAN Performance Test', summary, true);
+                return true;
+            } catch (error) {
+                appendResult('LAN Performance Test', `Error: ${error.message}`, false);
+                return false;
+            }
+        }
+
+        // Run initial test to show it works
+        testApiRoot();
+    </script>
+</body>
+</html>
