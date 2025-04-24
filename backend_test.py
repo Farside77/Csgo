@@ -6,7 +6,7 @@ import uuid
 BACKEND_URL = "https://backend-cs2-esports-tracker.zanity.net/api"
 
 class TestCS2EsportsTracker:
-    def setup_method(self):
+    def __init__(self):
         self.base_url = BACKEND_URL
         
     def test_api_root(self):
