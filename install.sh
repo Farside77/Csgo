@@ -1,0 +1,152 @@
+#!/bin/bash
+
+# CS2 Esports Tracker Installation Script
+echo "========================================="
+echo "CS2 Esports Tracker Installation Script"
+echo "========================================="
+
+# Exit on error
+set -e
+
+# Function to display status messages
+status() {
+    echo ""
+    echo ">>> $1"
+    echo ""
+}
+
+# Check if script is run as root
+if [ "$EUID" -ne 0 ]; then
+    echo "Please run this script as root or with sudo."
+    exit 1
+fi
+
+# Update package lists
+status "Updating package lists"
+apt-get update
+
+# Install system dependencies
+status "Installing system dependencies"
+apt-get install -y supervisor python3 python3-pip nodejs npm git curl
+
+# Install MongoDB
+status "Installing MongoDB"
+apt-get install -y gnupg
+curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | apt-key add -
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+apt-get update
+apt-get install -y mongodb-org
+
+# Create MongoDB data directory
+status "Setting up MongoDB data directory"
+mkdir -p /data/db
+chown -R $(whoami):$(whoami) /data/db
+
+# Create supervisor configuration for MongoDB
+status "Setting up MongoDB supervisor configuration"
+cat > /etc/supervisor/conf.d/mongodb.conf << EOF
+[program:mongodb]
+command=mongod --dbpath /data/db
+directory=/data
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/supervisor/mongodb.err.log
+stdout_logfile=/var/log/supervisor/mongodb.out.log
+EOF
+
+# Start MongoDB
+status "Starting MongoDB service"
+supervisorctl reread
+supervisorctl update
+supervisorctl start mongodb
+
+# Clone the repository if it doesn't exist
+if [ ! -d "/app/Csgo" ]; then
+    status "Cloning repository"
+    cd /app
+    git clone https://github.com/Farside77/Csgo.git -b test
+else
+    status "Repository already exists, updating"
+    cd /app/Csgo
+    git pull
+fi
+
+# Install Python dependencies
+status "Installing backend dependencies"
+cd /app/Csgo/backend
+pip install -r requirements.txt
+
+# Additional Python dependencies that might be needed
+status "Installing additional Python dependencies"
+pip install httpx pymongo[srv]
+
+# Install Node.js dependencies
+status "Installing frontend dependencies"
+cd /app/Csgo/frontend
+npm install -g yarn
+yarn install
+
+# Copy files to the appropriate directories
+status "Setting up application directories"
+mkdir -p /app/backend /app/frontend
+cp -r /app/Csgo/backend/* /app/backend/
+cp -r /app/Csgo/frontend/* /app/frontend/
+
+# Create supervisor configuration for backend
+status "Setting up backend supervisor configuration"
+cat > /etc/supervisor/conf.d/backend.conf << EOF
+[program:backend]
+command=python /app/backend/server.py
+directory=/app/backend
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/supervisor/backend.err.log
+stdout_logfile=/var/log/supervisor/backend.out.log
+environment=PYTHONUNBUFFERED=1
+EOF
+
+# Create supervisor configuration for frontend
+status "Setting up frontend supervisor configuration"
+cat > /etc/supervisor/conf.d/frontend.conf << EOF
+[program:frontend]
+command=yarn --cwd /app/frontend start
+directory=/app/frontend
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/supervisor/frontend.err.log
+stdout_logfile=/var/log/supervisor/frontend.out.log
+environment=NODE_ENV=development
+EOF
+
+# Create desktop shortcut
+status "Creating desktop shortcut"
+cat > /usr/share/applications/cs2-tracker.desktop << EOF
+[Desktop Entry]
+Type=Application
+Name=CS2 Esports Tracker
+Comment=Track CS2 Esports matches and betting opportunities
+Exec=/app/launcher.sh
+Icon=/app/frontend/public/favicon.ico
+Terminal=true
+Categories=Game;Utility;
+EOF
+
+# Reload supervisor configurations
+status "Reloading supervisor configurations"
+supervisorctl reread
+supervisorctl update
+
+# Start the services
+status "Starting services"
+supervisorctl restart all
+
+status "Installation complete!"
+echo ""
+echo "The CS2 Esports Tracker is now installed and running!"
+echo "Frontend: http://localhost:3000"
+echo "Backend: $(grep REACT_APP_BACKEND_URL /app/frontend/.env | cut -d'=' -f2)"
+echo ""
+echo "You can launch the application with: /app/launcher.sh"
+echo ""
+echo "Thank you for installing CS2 Esports Tracker!"
+echo "========================================="
