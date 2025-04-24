@@ -151,9 +151,70 @@ function startBackend() {
 }
 
 // This method will be called when Electron has finished initialization
-app.whenReady().then(() => {
-    createWindow();
-    startBackend();
+app.whenReady().then(async () => {
+    // Check if we're running the installer
+    if (process.argv.includes('--install-deps')) {
+        await installDependencies();
+        app.quit();
+        return;
+    }
+    
+    // Check if this is the first run and we need to install dependencies
+    const userDataPath = app.getPath('userData');
+    const configPath = path.join(userDataPath, 'config.json');
+    
+    if (!fs.existsSync(configPath)) {
+        // First run, show welcome screen and install dependencies
+        createWindow();
+        mainWindow.loadFile(path.join(__dirname, 'build', 'welcome.html'));
+        
+        dialog.showMessageBox(mainWindow, {
+            type: 'info',
+            title: 'First Run Setup',
+            message: 'Welcome to CS2 Esports Tracker!',
+            detail: 'This appears to be your first time running the application. We need to install some dependencies before you can start using it. This may take a few minutes.',
+            buttons: ['Install Now', 'Cancel'],
+            defaultId: 0,
+            cancelId: 1
+        }).then(result => {
+            if (result.response === 0) {
+                // User clicked "Install Now"
+                mainWindow.webContents.send('installation-status', 'Installing dependencies...');
+                
+                installDependencies().then(success => {
+                    if (success) {
+                        dialog.showMessageBox({
+                            type: 'info',
+                            title: 'Installation Complete',
+                            message: 'Dependencies installed successfully!',
+                            detail: 'You can now start using CS2 Esports Tracker.',
+                            buttons: ['Start Application']
+                        }).then(() => {
+                            mainWindow.loadFile(path.join(frontendBuildPath, 'index.html'));
+                            startBackend();
+                        });
+                    } else {
+                        dialog.showMessageBox({
+                            type: 'error',
+                            title: 'Installation Failed',
+                            message: 'Failed to install dependencies.',
+                            detail: 'Please try running the application again or install the dependencies manually.',
+                            buttons: ['Close']
+                        }).then(() => {
+                            app.quit();
+                        });
+                    }
+                });
+            } else {
+                // User clicked "Cancel"
+                app.quit();
+            }
+        });
+    } else {
+        // Normal startup
+        createWindow();
+        startBackend();
+    }
 
     app.on('activate', function () {
         // On macOS it's common to re-create a window when the dock icon is clicked
