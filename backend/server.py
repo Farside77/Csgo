@@ -953,21 +953,58 @@ async def get_bets(status: str = "all"):
 async def update_bet(bet_id: str, bet_update: dict = Body(...)):
     """Update an existing bet record"""
     try:
+        # Validate the update data
+        if "result" in bet_update and bet_update["result"] not in ["win", "loss"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Result must be either 'win' or 'loss'"
+            )
+            
+        if "status" in bet_update and bet_update["status"] not in ["pending", "settled"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Status must be either 'pending' or 'settled'"
+            )
+            
+        if "actual_return" in bet_update:
+            try:
+                bet_update["actual_return"] = float(bet_update["actual_return"])
+                if bet_update["actual_return"] < 0:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Actual return cannot be negative"
+                    )
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Actual return must be a number"
+                )
+        
+        # Find the existing bet first
+        existing_bet = await db.bets.find_one({"id": bet_id})
+        if not existing_bet:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Bet with ID {bet_id} not found"
+            )
+        
+        # Perform the update
         result = await db.bets.update_one(
             {"id": bet_id},
             {"$set": bet_update}
         )
         
-        if result.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Bet not found")
-        
+        # Get the updated bet
         updated_bet = await db.bets.find_one({"id": bet_id})
         updated_bet["_id"] = str(updated_bet["_id"])
         
         return updated_bet
+    except HTTPException:
+        # Re-raise HTTP exceptions directly
+        raise
     except Exception as e:
         logger.error(f"Error updating bet: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"An error occurred while updating the bet: {str(e)}")
 
 # Scheduled tasks
 async def scheduled_match_refresh():
