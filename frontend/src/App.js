@@ -52,7 +52,8 @@ function App() {
 
   const fetchBets = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/bets`);
+      // BACKEND_URL already includes /api prefix
+      const response = await fetch(`${BACKEND_URL}/bets`);
       
       if (!response.ok) {
         throw new Error(`Error fetching bets: ${response.statusText}`);
@@ -68,7 +69,8 @@ function App() {
   const refreshMatches = async () => {
     try {
       setRefreshing(true);
-      const response = await fetch(`${BACKEND_URL}/api/refresh-matches`, {
+      // BACKEND_URL already includes /api prefix
+      const response = await fetch(`${BACKEND_URL}/refresh-matches`, {
         method: 'POST',
       });
       
