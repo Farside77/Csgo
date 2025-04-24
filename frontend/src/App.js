@@ -232,12 +232,32 @@ function App() {
                       <div className="match-teams">
                         <div className={`team ${match.predicted_winner === match.team1 ? 'predicted-winner' : ''}`}>
                           {match.team1}
-                          {match.team1_odds && <span className="odds">{match.team1_odds.toFixed(2)}</span>}
+                          {match.team1_odds && (
+                            <div className="odds-container">
+                              <span className="odds">{match.team1_odds.toFixed(2)}</span>
+                              {match.odds_sources && (
+                                <div className="odds-tooltip">
+                                  <div>HLTV: {match.odds_sources.hltv?.team1 ? match.odds_sources.hltv.team1.toFixed(2) : 'N/A'}</div>
+                                  <div>GG.Bet: {match.odds_sources.ggbet?.team1 ? match.odds_sources.ggbet.team1.toFixed(2) : 'N/A'}</div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                         <div className="vs">VS</div>
                         <div className={`team ${match.predicted_winner === match.team2 ? 'predicted-winner' : ''}`}>
                           {match.team2}
-                          {match.team2_odds && <span className="odds">{match.team2_odds.toFixed(2)}</span>}
+                          {match.team2_odds && (
+                            <div className="odds-container">
+                              <span className="odds">{match.team2_odds.toFixed(2)}</span>
+                              {match.odds_sources && (
+                                <div className="odds-tooltip">
+                                  <div>HLTV: {match.odds_sources.hltv?.team2 ? match.odds_sources.hltv.team2.toFixed(2) : 'N/A'}</div>
+                                  <div>GG.Bet: {match.odds_sources.ggbet?.team2 ? match.odds_sources.ggbet.team2.toFixed(2) : 'N/A'}</div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       
