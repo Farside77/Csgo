@@ -159,16 +159,25 @@ If you encounter any issues:
 
 ## Uninstallation
 
-If you need to uninstall the application, you can use the provided uninstall script:
+You have multiple ways to uninstall the application:
 
-```bash
-sudo /app/uninstall.sh
-```
+1. **Desktop Icon**:
+   - Use the "Uninstall CS2 Esports Tracker" desktop icon
 
-This script will:
+2. **Uninstall Script**:
+   - Double-click on `/app/uninstall_cs2_tracker.sh` in your file manager
+
+3. **Terminal Command**:
+   ```bash
+   sudo /app/uninstall.sh
+   ```
+
+Any of these methods will:
 1. Stop all running services
 2. Remove supervisor configurations
 3. Remove application files
-4. Remove the desktop shortcut
+4. Remove the desktop shortcuts
 5. Ask if you want to remove MongoDB data
 6. Ask if you want to remove the cloned repository
+
+The terminal will remain open until you press a key, allowing you to read all messages.
