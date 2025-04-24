@@ -8,10 +8,12 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 function App() {
   const [activeTab, setActiveTab] = useState('matches');
   const [matches, setMatches] = useState([]);
+  const [filteredMatches, setFilteredMatches] = useState([]);
   const [bets, setBets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState(null);
+  const [analysisMatch, setAnalysisMatch] = useState(null);
   const [betForm, setBetForm] = useState({
     match_id: '',
     team_bet_on: '',
