@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=CS2 Terminal Launch
+Comment=Launch CS2 Tracker in a terminal (guaranteed to stay open)
+Exec=/app/terminal_launch.sh
+Terminal=false
+Categories=Game;Utility;
