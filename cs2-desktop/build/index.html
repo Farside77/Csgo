@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src http://localhost:8001 http://127.0.0.1:8001 ws:; style-src 'self' 'unsafe-inline'; script-src 'self';">
+    <title>CS2 Esports Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="shortcut icon" href="favicon.ico">
+</head>
+<body>
+    <div id="root">
+        <div class="app-container">
+            <header>
+                <h1>CS2 Esports Tracker</h1>
+                <div class="nav-buttons">
+                    <button id="refreshButton">Refresh Matches</button>
+                    <button id="restartBackendButton">Restart Backend</button>
+                </div>
+            </header>
+            
+            <main>
+                <div class="dashboard">
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label for="teamFilter">Team:</label>
+                            <input type="text" id="teamFilter" placeholder="Filter by team">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="eventFilter">Event:</label>
+                            <input type="text" id="eventFilter" placeholder="Filter by event">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="statusFilter">Status:</label>
+                            <select id="statusFilter">
+                                <option value="">All</option>
+                                <option value="upcoming">Upcoming</option>
+                                <option value="live">Live</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="lanFilter">LAN:</label>
+                            <select id="lanFilter">
+                                <option value="">All</option>
+                                <option value="true">LAN Only</option>
+                                <option value="false">Online Only</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="matches-container">
+                        <h2>Matches</h2>
+                        <div id="matchesList"></div>
+                        <div id="loadingIndicator" class="hidden">Loading...</div>
+                        <div id="errorMessage" class="hidden"></div>
+                    </div>
+                    
+                    <div class="bets-container">
+                        <h2>My Bets</h2>
+                        <div id="betsList"></div>
+                        <div class="stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Win/Loss:</span>
+                                <span id="winLossRatio">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Profit:</span>
+                                <span id="profit">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">ROI:</span>
+                                <span id="roi">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            
+            <footer>
+                <p>CS2 Esports Tracker Desktop - v1.0.0</p>
+            </footer>
+        </div>
+    </div>
+    
+    <script src="renderer.js"></script>
+</body>
+</html>
