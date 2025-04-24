@@ -136,9 +136,41 @@ stdout_logfile=/var/log/supervisor/frontend.out.log
 environment=NODE_ENV=development
 EOF
 
-# Create desktop shortcut
-status "Creating desktop shortcut"
-cat > /usr/share/applications/cs2-tracker.desktop << EOF
+# Create desktop shortcuts
+status "Creating desktop shortcuts"
+
+# Determine the best terminal emulator available
+TERMINAL_CMD=""
+if command -v gnome-terminal &> /dev/null; then
+    TERMINAL_CMD="gnome-terminal --wait --"
+elif command -v xterm &> /dev/null; then
+    TERMINAL_CMD="xterm -e"
+elif command -v konsole &> /dev/null; then
+    TERMINAL_CMD="konsole -e"
+elif command -v xfce4-terminal &> /dev/null; then
+    TERMINAL_CMD="xfce4-terminal -e"
+elif command -v lxterminal &> /dev/null; then
+    TERMINAL_CMD="lxterminal -e"
+else
+    TERMINAL_CMD=""
+    echo "Warning: No suitable terminal emulator found. Using direct execution."
+fi
+
+# Create launcher desktop entry
+mkdir -p /usr/share/applications
+if [ -n "$TERMINAL_CMD" ]; then
+    cat > /usr/share/applications/cs2-tracker.desktop << EOF
+[Desktop Entry]
+Type=Application
+Name=CS2 Esports Tracker
+Comment=Track CS2 Esports matches and betting opportunities
+Exec=${TERMINAL_CMD} /app/launcher.sh
+Icon=/app/frontend/public/favicon.ico
+Terminal=false
+Categories=Game;Utility;
+EOF
+else
+    cat > /usr/share/applications/cs2-tracker.desktop << EOF
 [Desktop Entry]
 Type=Application
 Name=CS2 Esports Tracker
@@ -148,6 +180,39 @@ Icon=/app/frontend/public/favicon.ico
 Terminal=true
 Categories=Game;Utility;
 EOF
+fi
+
+# Create install desktop entry
+if [ -n "$TERMINAL_CMD" ]; then
+    cat > /usr/share/applications/cs2-tracker-install.desktop << EOF
+[Desktop Entry]
+Type=Application
+Name=Install CS2 Esports Tracker
+Comment=Install the CS2 Esports Tracker application
+Exec=pkexec ${TERMINAL_CMD} /app/install.sh
+Icon=/app/frontend/public/favicon.ico
+Terminal=false
+Categories=Game;Utility;
+EOF
+fi
+
+# Create uninstall desktop entry
+if [ -n "$TERMINAL_CMD" ]; then
+    cat > /usr/share/applications/cs2-tracker-uninstall.desktop << EOF
+[Desktop Entry]
+Type=Application
+Name=Uninstall CS2 Esports Tracker
+Comment=Uninstall the CS2 Esports Tracker application
+Exec=pkexec ${TERMINAL_CMD} /app/uninstall.sh
+Icon=/app/frontend/public/favicon.ico
+Terminal=false
+Categories=Game;Utility;
+EOF
+fi
+
+# Copy the alternative desktop entries (which try multiple terminal emulators)
+mkdir -p /app/desktop-entries
+cp -f /app/desktop-entries/*.desktop /usr/local/share/applications/ 2>/dev/null || true
 
 # Reload supervisor configurations
 status "Reloading supervisor configurations"
