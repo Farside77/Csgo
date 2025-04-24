@@ -388,6 +388,7 @@ async def calculate_match_predictions(match):
     """
     An advanced statistical model to predict match outcomes
     Includes form, head-to-head, map pool analysis, and player performance
+    Heavily weights LAN performances over online, with recency and roster stability factors
     """
     # Get team historical data from database
     team1_stats = await db.team_stats.find_one({"team_name": match["team1"]})
@@ -434,40 +435,214 @@ async def calculate_match_predictions(match):
             }
         }
     
+    # Get roster change dates (for stability factor)
+    team1_last_change = datetime.fromisoformat(match.get("roster_info", {}).get(
+        "team1_last_change", 
+        (datetime.now() - timedelta(days=365)).isoformat()
+    ))
+    team2_last_change = datetime.fromisoformat(match.get("roster_info", {}).get(
+        "team2_last_change", 
+        (datetime.now() - timedelta(days=365)).isoformat()
+    ))
+    
+    # Calculate roster stability factor (0-1, higher is more stable/better)
+    # Teams with recent roster changes get penalized
+    current_date = datetime.now()
+    team1_days_since_change = (current_date - team1_last_change).days
+    team2_days_since_change = (current_date - team2_last_change).days
+    
+    # Normalize to a 0-1 scale with exponential decay
+    # Recent changes (< 30 days) heavily penalized, after 180 days less impact
+    team1_roster_stability = min(1.0, team1_days_since_change / 180)
+    team2_roster_stability = min(1.0, team2_days_since_change / 180)
+    
+    # Find team's recent match history with emphasis on LAN performance
+    team1_matches = await db.matches.find({
+        "$or": [
+            {"team1": match["team1"], "status": "completed"},
+            {"team2": match["team1"], "status": "completed"}
+        ]
+    }).sort("date", -1).to_list(length=20)  # Get most recent 20 matches
+    
+    team2_matches = await db.matches.find({
+        "$or": [
+            {"team1": match["team2"], "status": "completed"},
+            {"team2": match["team2"], "status": "completed"}
+        ]
+    }).sort("date", -1).to_list(length=20)  # Get most recent 20 matches
+    
+    # Calculate LAN vs Online performance for each team
+    team1_lan_wins = 0
+    team1_lan_matches = 0
+    team1_online_wins = 0
+    team1_online_matches = 0
+    
+    team2_lan_wins = 0
+    team2_lan_matches = 0
+    team2_online_wins = 0
+    team2_online_matches = 0
+    
+    # Process team1 matches
+    for past_match in team1_matches:
+        match_date = datetime.fromisoformat(past_match["date"])
+        days_ago = (current_date - match_date).days
+        
+        # Apply time decay factor (more recent matches matter more)
+        # Exponential decay with half-life of 90 days
+        time_weight = 2 ** (-days_ago / 90)
+        
+        # Double weight for matches played after roster stabilized
+        if match_date > team1_last_change:
+            time_weight *= 2
+            
+        is_lan = past_match.get("is_lan", False)
+        did_win = (
+            (past_match["team1"] == match["team1"] and past_match.get("winner") == match["team1"]) or
+            (past_match["team2"] == match["team1"] and past_match.get("winner") == match["team1"])
+        )
+        
+        if is_lan:
+            team1_lan_matches += time_weight
+            if did_win:
+                team1_lan_wins += time_weight
+        else:
+            team1_online_matches += time_weight
+            if did_win:
+                team1_online_wins += time_weight
+    
+    # Process team2 matches
+    for past_match in team2_matches:
+        match_date = datetime.fromisoformat(past_match["date"])
+        days_ago = (current_date - match_date).days
+        
+        # Apply time decay factor (more recent matches matter more)
+        # Exponential decay with half-life of 90 days
+        time_weight = 2 ** (-days_ago / 90)
+        
+        # Double weight for matches played after roster stabilized
+        if match_date > team2_last_change:
+            time_weight *= 2
+            
+        is_lan = past_match.get("is_lan", False)
+        did_win = (
+            (past_match["team1"] == match["team2"] and past_match.get("winner") == match["team2"]) or
+            (past_match["team2"] == match["team2"] and past_match.get("winner") == match["team2"])
+        )
+        
+        if is_lan:
+            team2_lan_matches += time_weight
+            if did_win:
+                team2_lan_wins += time_weight
+        else:
+            team2_online_matches += time_weight
+            if did_win:
+                team2_online_wins += time_weight
+    
+    # Calculate win rates with LAN weighted 3x higher than online
+    team1_lan_win_rate = team1_lan_wins / max(1, team1_lan_matches)
+    team1_online_win_rate = team1_online_wins / max(1, team1_online_matches)
+    team1_weighted_win_rate = (team1_lan_win_rate * 3 + team1_online_win_rate) / 4
+    
+    team2_lan_win_rate = team2_lan_wins / max(1, team2_lan_matches)
+    team2_online_win_rate = team2_online_wins / max(1, team2_online_matches)
+    team2_weighted_win_rate = (team2_lan_win_rate * 3 + team2_online_win_rate) / 4
+    
+    # Use our weighted win rates if we have match history, otherwise use default stats
+    team1_win_rate = team1_weighted_win_rate if team1_lan_matches + team1_online_matches > 0 else team1_stats.get("win_rate", 0.5)
+    team2_win_rate = team2_weighted_win_rate if team2_lan_matches + team2_online_matches > 0 else team2_stats.get("win_rate", 0.5)
+    
     # Get head-to-head history
     h2h_matches = await db.matches.find({
         "$or": [
             {"team1": match["team1"], "team2": match["team2"], "status": "completed"},
             {"team1": match["team2"], "team2": match["team1"], "status": "completed"}
         ]
-    }).to_list(length=10)
+    }).sort("date", -1).to_list(length=10)
     
-    # Calculate head-to-head advantage
+    # Calculate head-to-head advantage with recency and LAN weighting
     h2h_advantage = 0
     if h2h_matches:
-        team1_wins = sum(1 for m in h2h_matches if 
-                         (m["team1"] == match["team1"] and m.get("winner") == match["team1"]) or 
-                         (m["team2"] == match["team1"] and m.get("winner") == match["team1"]))
-        h2h_advantage = (team1_wins / len(h2h_matches)) - 0.5
+        weighted_matches = 0
+        weighted_team1_wins = 0
+        
+        for h2h_match in h2h_matches:
+            match_date = datetime.fromisoformat(h2h_match["date"])
+            days_ago = (current_date - match_date).days
+            
+            # Apply time decay and LAN weight
+            time_weight = 2 ** (-days_ago / 90)  # 90-day half-life
+            is_lan = h2h_match.get("is_lan", False)
+            match_weight = time_weight * (3 if is_lan else 1)
+            
+            # Only count matches after both teams' recent roster changes
+            if match_date > team1_last_change and match_date > team2_last_change:
+                match_weight *= 2
+            
+            weighted_matches += match_weight
+            
+            if (h2h_match["team1"] == match["team1"] and h2h_match.get("winner") == match["team1"]) or \
+               (h2h_match["team2"] == match["team1"] and h2h_match.get("winner") == match["team1"]):
+                weighted_team1_wins += match_weight
+        
+        if weighted_matches > 0:
+            h2h_advantage = (weighted_team1_wins / weighted_matches) - 0.5
     
     # Weight different factors in prediction
     weights = {
-        "overall_win_rate": 0.30,
-        "recent_form": 0.25,
-        "map_advantage": 0.20,
+        "overall_win_rate": 0.25,
+        "recent_form": 0.20,
+        "map_advantage": 0.15,
         "head_to_head": 0.15,
-        "team_experience": 0.10
+        "roster_stability": 0.15,
+        "lan_performance": 0.10  # Actual LAN results already weighted in win rates
     }
     
     # Calculate overall win rate component
-    team1_win_rate = team1_stats.get("win_rate", 0.5)
-    team2_win_rate = team2_stats.get("win_rate", 0.5)
     win_rate_component = (team1_win_rate - team2_win_rate) / 2
     
-    # Calculate recent form component
-    team1_form = team1_stats.get("form", 0.5)
-    team2_form = team2_stats.get("form", 0.5)
+    # Calculate recent form component (using our processed match history)
+    team1_recent_wins = 0
+    team1_recent_matches = 0
+    team2_recent_wins = 0
+    team2_recent_matches = 0
+    
+    # Only look at matches in the past 30 days for form
+    for past_match in team1_matches:
+        match_date = datetime.fromisoformat(past_match["date"])
+        days_ago = (current_date - match_date).days
+        if days_ago <= 30:
+            team1_recent_matches += 1
+            if (past_match["team1"] == match["team1"] and past_match.get("winner") == match["team1"]) or \
+               (past_match["team2"] == match["team1"] and past_match.get("winner") == match["team1"]):
+                team1_recent_wins += 1
+    
+    for past_match in team2_matches:
+        match_date = datetime.fromisoformat(past_match["date"])
+        days_ago = (current_date - match_date).days
+        if days_ago <= 30:
+            team2_recent_matches += 1
+            if (past_match["team1"] == match["team2"] and past_match.get("winner") == match["team2"]) or \
+               (past_match["team2"] == match["team2"] and past_match.get("winner") == match["team2"]):
+                team2_recent_wins += 1
+    
+    team1_form = team1_recent_wins / max(1, team1_recent_matches) if team1_recent_matches > 0 else team1_stats.get("form", 0.5)
+    team2_form = team2_recent_wins / max(1, team2_recent_matches) if team2_recent_matches > 0 else team2_stats.get("form", 0.5)
     form_component = (team1_form - team2_form) / 2
+    
+    # Calculate roster stability advantage
+    roster_stability_component = (team1_roster_stability - team2_roster_stability) / 2
+    
+    # Calculate LAN performance advantage - for upcoming LAN matches, LAN history matters more
+    is_upcoming_lan = match.get("is_lan", False)
+    lan_performance_factor = 0
+    
+    if is_upcoming_lan:
+        # For LAN events, past LAN performance is crucial
+        if team1_lan_matches > 0 and team2_lan_matches > 0:
+            lan_performance_factor = (team1_lan_win_rate - team2_lan_win_rate) / 2
+            # Increase LAN factor weight for LAN events
+            weights["lan_performance"] *= 2
+            weights = {k: v/sum(weights.values()) for k, v in weights.items()}  # Normalize weights
     
     # Calculate map advantage
     map_advantage = 0
@@ -491,18 +666,14 @@ async def calculate_match_predictions(match):
         if map_advantages:
             map_advantage = sum(map_advantages) / len(map_advantages)
     
-    # Calculate team experience (proxy by team name recognition)
-    team1_exp = 0.5 + (0.3 * (hash(match["team1"]) % 10) / 10)
-    team2_exp = 0.5 + (0.3 * (hash(match["team2"]) % 10) / 10)
-    experience_component = (team1_exp - team2_exp) / 2
-    
     # Combine all components
     advantage_score = (
         win_rate_component * weights["overall_win_rate"] +
         form_component * weights["recent_form"] +
         map_advantage * weights["map_advantage"] +
         h2h_advantage * weights["head_to_head"] +
-        experience_component * weights["team_experience"]
+        roster_stability_component * weights["roster_stability"] +
+        lan_performance_factor * weights["lan_performance"]
     )
     
     # Convert advantage to probability (transform from [-0.5, 0.5] to [0, 1])
@@ -577,11 +748,34 @@ async def calculate_match_predictions(match):
     
     predicted_score = f"{team1_expected_maps}-{team2_expected_maps}"
     
+    # Additional analysis data
+    analysis_data = {
+        # Team 1 data
+        "team1_lan_win_rate": round(team1_lan_win_rate, 2) if team1_lan_matches > 0 else None,
+        "team1_online_win_rate": round(team1_online_win_rate, 2) if team1_online_matches > 0 else None,
+        "team1_recent_form": round(team1_form, 2),
+        "team1_roster_stability": round(team1_roster_stability, 2),
+        "team1_days_since_roster_change": team1_days_since_change,
+        
+        # Team 2 data
+        "team2_lan_win_rate": round(team2_lan_win_rate, 2) if team2_lan_matches > 0 else None,
+        "team2_online_win_rate": round(team2_online_win_rate, 2) if team2_online_matches > 0 else None,
+        "team2_recent_form": round(team2_form, 2),
+        "team2_roster_stability": round(team2_roster_stability, 2),
+        "team2_days_since_roster_change": team2_days_since_change,
+        
+        # Match context
+        "is_lan": is_upcoming_lan,
+        "h2h_advantage": round(h2h_advantage, 2) if h2h_matches else None,
+        "component_weights": weights
+    }
+    
     return {
         "predicted_winner": predicted_winner,
         "win_probability": round(win_probability, 2),
         "predicted_score": predicted_score,
-        "ev_value": round(ev_value, 2) if ev_value is not None else None
+        "ev_value": round(ev_value, 2) if ev_value is not None else None,
+        "analysis": analysis_data
     }
 
 # API Routes
