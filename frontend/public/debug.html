@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CS2 Esports Tracker Debug Tool</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #4a6ecc;
+        }
+        button {
+            background-color: #5d87ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #4a6ecc;
+        }
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .error {
+            color: #f44336;
+            font-weight: bold;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+            max-height: 300px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .match-teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .team {
+            font-weight: bold;
+        }
+        .vs {
+            color: #999;
+            padding: 0 10px;
+        }
+        .card-actions {
+            margin-top: 10px;
+            text-align: right;
+        }
+        .env-info {
+            margin-top: 20px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>CS2 Esports Tracker Debug Tool</h1>
+    <p>This page helps diagnose issues with the CS2 Esports Tracker application.</p>
+
+    <div>
+        <button onclick="testApiConnection()">Test API Connection</button>
+        <button onclick="fetchAndRenderMatches()">Fetch & Render Matches</button>
+        <button onclick="refreshMatchData()">Refresh Match Data</button>
+        <button onclick="testBetCreate()">Test Bet Creation</button>
+    </div>
+
+    <div class="env-info">
+        <h3>Environment Info:</h3>
+        <div id="envInfo"></div>
+    </div>
+
+    <h2>API Connection</h2>
+    <div>
+        <h3>Status: <span id="apiStatus">Not tested</span></h3>
+        <pre id="apiResult">Click the button to test</pre>
+    </div>
+
+    <h2>Matches</h2>
+    <div>
+        <h3>Status: <span id="matchesStatus">Not tested</span></h3>
+        <div id="matchesCount"></div>
+        <div id="matchesList"></div>
+        <pre id="matchesJson">Click the button to fetch</pre>
+    </div>
+
+    <h2>Create Bet Test</h2>
+    <div>
+        <h3>Status: <span id="betStatus">Not tested</span></h3>
+        <pre id="betResult">Click the button to test</pre>
+    </div>
+
+    <script>
+        // Display environment info
+        function showEnvironmentInfo() {
+            const envInfo = {
+                'User Agent': navigator.userAgent,
+                'Window Location': window.location.href,
+                'Protocol': window.location.protocol,
+                'Host': window.location.host
+            };
+            
+            document.getElementById('envInfo').innerText = JSON.stringify(envInfo, null, 2);
+        }
+        
+        showEnvironmentInfo();
+
+        // Test basic API connection
+        async function testApiConnection() {
+            try {
+                document.getElementById('apiStatus').innerText = "Testing...";
+                document.getElementById('apiStatus').className = "";
+                
+                const response = await fetch('http://localhost:8001/api');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                document.getElementById('apiResult').innerText = JSON.stringify(data, null, 2);
+                document.getElementById('apiStatus').innerText = "Success!";
+                document.getElementById('apiStatus').className = "success";
+            } catch (error) {
+                document.getElementById('apiResult').innerText = error.toString();
+                document.getElementById('apiStatus').innerText = "Failed!";
+                document.getElementById('apiStatus').className = "error";
+            }
+        }
+
+        // Fetch and render matches
+        async function fetchAndRenderMatches() {
+            try {
+                document.getElementById('matchesStatus').innerText = "Fetching...";
+                document.getElementById('matchesStatus').className = "";
+                document.getElementById('matchesList').innerHTML = "";
+                
+                const response = await fetch('http://localhost:8001/api/matches');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const matches = await response.json();
+                
+                document.getElementById('matchesJson').innerText = JSON.stringify(matches.slice(0, 3), null, 2);
+                document.getElementById('matchesCount').innerText = `Found ${matches.length} matches`;
+                
+                if (matches.length > 0) {
+                    // Render first 5 matches
+                    const matchesToShow = matches.slice(0, 5);
+                    
+                    matchesToShow.forEach(match => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        
+                        const cardHeader = document.createElement('div');
+                        cardHeader.className = 'card-header';
+                        
+                        const event = document.createElement('div');
+                        event.innerText = match.event || 'Unknown Event';
+                        
+                        const date = document.createElement('div');
+                        date.innerText = new Date(match.date).toLocaleString();
+                        
+                        cardHeader.appendChild(event);
+                        cardHeader.appendChild(date);
+                        
+                        const matchTeams = document.createElement('div');
+                        matchTeams.className = 'match-teams';
+                        
+                        const team1 = document.createElement('div');
+                        team1.className = 'team';
+                        team1.innerText = match.team1 || 'Team 1';
+                        
+                        const vs = document.createElement('div');
+                        vs.className = 'vs';
+                        vs.innerText = 'VS';
+                        
+                        const team2 = document.createElement('div');
+                        team2.className = 'team';
+                        team2.innerText = match.team2 || 'Team 2';
+                        
+                        matchTeams.appendChild(team1);
+                        matchTeams.appendChild(vs);
+                        matchTeams.appendChild(team2);
+                        
+                        const details = document.createElement('div');
+                        details.innerHTML = `
+                            <div>Format: ${match.format || 'Unknown'}</div>
+                            ${match.predicted_winner ? `<div>Prediction: ${match.predicted_winner} (${match.win_probability * 100}%)</div>` : ''}
+                            ${match.predicted_score ? `<div>Predicted Score: ${match.predicted_score}</div>` : ''}
+                        `;
+                        
+                        const actions = document.createElement('div');
+                        actions.className = 'card-actions';
+                        
+                        const betButton = document.createElement('button');
+                        betButton.innerText = 'Place Bet';
+                        betButton.onclick = () => createTestBet(match);
+                        
+                        actions.appendChild(betButton);
+                        
+                        card.appendChild(cardHeader);
+                        card.appendChild(matchTeams);
+                        card.appendChild(details);
+                        card.appendChild(actions);
+                        
+                        document.getElementById('matchesList').appendChild(card);
+                    });
+                }
+                
+                document.getElementById('matchesStatus').innerText = "Success!";
+                document.getElementById('matchesStatus').className = "success";
+            } catch (error) {
+                document.getElementById('matchesJson').innerText = error.toString();
+                document.getElementById('matchesStatus').innerText = "Failed!";
+                document.getElementById('matchesStatus').className = "error";
+            }
+        }
+
+        // Refresh match data
+        async function refreshMatchData() {
+            try {
+                document.getElementById('matchesStatus').innerText = "Refreshing...";
+                document.getElementById('matchesStatus').className = "";
+                
+                const response = await fetch('http://localhost:8001/api/refresh-matches', {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                document.getElementById('matchesJson').innerText = JSON.stringify(result, null, 2);
+                document.getElementById('matchesStatus').innerText = "Refreshed!";
+                document.getElementById('matchesStatus').className = "success";
+                
+                // Fetch and render updated matches
+                fetchAndRenderMatches();
+            } catch (error) {
+                document.getElementById('matchesJson').innerText = error.toString();
+                document.getElementById('matchesStatus').innerText = "Refresh Failed!";
+                document.getElementById('matchesStatus').className = "error";
+            }
+        }
+
+        // Create a test bet
+        async function createTestBet(match) {
+            try {
+                document.getElementById('betStatus').innerText = "Creating...";
+                document.getElementById('betStatus').className = "";
+                
+                const betData = {
+                    match_id: match.id,
+                    team_bet_on: match.team1,
+                    odds: 1.5,
+                    stake: 100
+                };
+                
+                const response = await fetch('http://localhost:8001/api/bets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(betData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                document.getElementById('betResult').innerText = JSON.stringify(result, null, 2);
+                document.getElementById('betStatus').innerText = "Bet Created!";
+                document.getElementById('betStatus').className = "success";
+            } catch (error) {
+                document.getElementById('betResult').innerText = error.toString();
+                document.getElementById('betStatus').innerText = "Failed!";
+                document.getElementById('betStatus').className = "error";
+            }
+        }
+
+        // Test bet creation with a generic match
+        async function testBetCreate() {
+            try {
+                // First get match data
+                const matchesResponse = await fetch('http://localhost:8001/api/matches');
+                
+                if (!matchesResponse.ok) {
+                    throw new Error(`HTTP error! Status: ${matchesResponse.status}`);
+                }
+                
+                const matches = await matchesResponse.json();
+                
+                if (!matches || matches.length === 0) {
+                    throw new Error('No matches available for betting test');
+                }
+                
+                // Use the first match
+                createTestBet(matches[0]);
+            } catch (error) {
+                document.getElementById('betResult').innerText = error.toString();
+                document.getElementById('betStatus').innerText = "Failed!";
+                document.getElementById('betStatus').className = "error";
+            }
+        }
+    </script>
+</body>
+</html>
