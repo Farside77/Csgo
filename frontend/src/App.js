@@ -226,14 +226,19 @@ function App() {
             
             {error && <div className="error-message">{error}</div>}
             
+            <MatchFilter 
+              matches={matches} 
+              onFilter={setFilteredMatches} 
+            />
+            
             {isLoading ? (
               <div className="loading">Loading matches...</div>
             ) : (
               <div className="matches-list">
-                {matches.length === 0 ? (
-                  <div className="no-data">No upcoming matches found.</div>
+                {filteredMatches.length === 0 ? (
+                  <div className="no-data">No matches found matching the current filters.</div>
                 ) : (
-                  matches.map(match => (
+                  filteredMatches.map(match => (
                     <div key={match.id} className="match-card">
                       <div className="match-header">
                         <div className="match-event">{match.event}</div>
@@ -290,6 +295,13 @@ function App() {
                       </div>
                       
                       <div className="match-actions">
+                        <button 
+                          className="bet-button"
+                          onClick={() => openAnalysis(match)}
+                          style={{ marginRight: '10px' }}
+                        >
+                          Analysis
+                        </button>
                         <button 
                           className="bet-button"
                           onClick={() => openBetForm(match)}
